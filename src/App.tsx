@@ -113,7 +113,7 @@ function App() {
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
           {/* Filters */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <div id="controlBox" className="bg-sky-50 p-4 rounded-t-lg">
+            <div className="bg-white sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
               <h2 className="text-lg font-semibold mb-4">Filters</h2>
               <form>
                 <fieldset className="mb-4">
