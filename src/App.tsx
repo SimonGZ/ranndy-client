@@ -103,14 +103,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      <header className="bg-blue-600 text-white p-4">
-        <div className="container mx-auto">
+      {/* ONE container, wrapping everything */}
+      <div className="container mx-auto p-4 max-w-5xl">
+        <header className="bg-blue-600 text-white p-4 rounded-t-lg">
           <h1 className="text-2xl font-bold">Name Generator</h1>
-        </div>
-      </header>
+        </header>
 
-      <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
           {/* Filters */}
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4">Filters</h2>
