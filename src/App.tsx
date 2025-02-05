@@ -5,6 +5,7 @@ import "./App.css";
 interface Name {
   first: string;
   last: string;
+  gender: string;
 }
 
 interface Query {
@@ -64,12 +65,13 @@ function App() {
       }
 
       const data = await response.json();
-
       // Correctly map the data
       setNames(
-        data.names.map((item: any) => ({
-          first: item.firstname.name,
-          last: item.lastname.name,
+        data.names.map((item: any[]) => ({
+          // Type item as an array
+          first: item[0] ? item[0].name : "N/A", // Access first element, check for null
+          last: item[1] ? item[1].name : "N/A", // Access second element, check for null
+          gender: item[0] ? item[0].gender : "N/A",
         })),
       );
     } catch (err: any) {
@@ -101,8 +103,13 @@ function App() {
 
   return (
     <div className="App">
-      <div className="topBar">
-        <div className="controlDrawer">
+      <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css"
+      />
+      <div className="ZtopBar">
+        <div className="ZcontrolDrawer">
           <form>
             <fieldset>
               <legend>First Name:</legend>
@@ -226,7 +233,7 @@ function App() {
                   href={`http://google.com/search?q=name+meaning+${name.first}`}
                 >
                   {name.first}
-                </a>
+                </a>{" "}
                 <a
                   className="searchLink"
                   href={`http://google.com/search?q=surname+${name.last}`}
