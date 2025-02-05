@@ -102,147 +102,205 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <link
-        rel="stylesheet"
-        type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css"
-      />
-      <div className="ZtopBar">
-        <div className="ZcontrolDrawer">
-          <form>
-            <fieldset>
-              <legend>First Name:</legend>
-              <div className="selector">
-                <label htmlFor="gender">Gender</label>
-                <select
-                  id="gender"
-                  value={query.gender}
-                  onChange={handleChange}
-                >
-                  <option value="any">Any</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                </select>
-              </div>
-              <div className="selector">
-                <label htmlFor="rank">Popularity</label>
-                <select id="rank" value={query.rank} onChange={handleChange}>
-                  <option value="any">Any</option>
-                  <option value="high">High</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div className="selector">
-                <label htmlFor="year">Year</label>
-                <select id="year" value={query.year} onChange={handleChange}>
-                  <option value={0}>Any</option>
-                  {Array.from({ length: 145 }, (_, i) => 1880 + i).map(
-                    (year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-              <div className="startsWith">
-                <label htmlFor="fstartswith">Starts With:</label>
-                <input
-                  type="search"
-                  id="fstartswith"
-                  value={query.fstartswith}
-                  onChange={handleChange}
-                  placeholder="Jo..."
-                  autoComplete="off"
-                />
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Last Name:</legend>
-              <div className="selector">
-                <label htmlFor="race">Race</label>
-                <select id="race" value={query.race} onChange={handleChange}>
-                  <option value="any">Any</option>
-                  <option value="pctwhite">White</option>
-                  <option value="pcthispanic">Hispanic</option>
-                  <option value="pctasian">Asian</option>
-                  <option value="pctblack">Black</option>
-                  <option value="pctnative">Native</option>
-                </select>
-                <label htmlFor="racePercent">Race %:</label>
-                <input
-                  type="number"
-                  id="racePercent"
-                  value={query.racePercent}
-                  onChange={handleRacePercentChange}
-                  min="0"
-                  max="99"
-                />
-              </div>
-              <div className="selector">
-                <label htmlFor="frequency">Popularity</label>
-                <select
-                  id="frequency"
-                  value={query.frequency}
-                  onChange={handleChange}
-                  // Removed the client-side disable logic. The API should handle this.
-                >
-                  <option value="any">Any</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div className="startsWith">
-                <label htmlFor="sstartswith">Starts With:</label>
-                <input
-                  type="search"
-                  id="sstartswith"
-                  value={query.sstartswith}
-                  onChange={handleChange}
-                  placeholder="Smi..."
-                  autoComplete="off"
-                />
-              </div>
-            </fieldset>
-          </form>
+    <div className="min-h-screen bg-gray-100 font-sans">
+      <header className="bg-blue-600 text-white p-4">
+        <div className="container mx-auto">
+          <h1 className="text-2xl font-bold">Name Generator</h1>
         </div>
-        <header>
-          <div className="title">
-            <a href="#" className="settingsBtn">
-              R!
-            </a>
+      </header>
+
+      <div className="container mx-auto p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Filters */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Filters</h2>
+            <form>
+              <fieldset className="mb-4">
+                <legend className="font-medium">First Name:</legend>
+                <div className="mb-2">
+                  <label
+                    htmlFor="gender"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Gender
+                  </label>
+                  <select
+                    id="gender"
+                    value={query.gender}
+                    onChange={handleChange}
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="any">Any</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                  </select>
+                </div>
+                <div className="mb-2">
+                  <label
+                    htmlFor="rank"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Popularity
+                  </label>
+                  <select
+                    id="rank"
+                    value={query.rank}
+                    onChange={handleChange}
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="any">Any</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div className="mb-2">
+                  <label
+                    htmlFor="year"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Year
+                  </label>
+                  <select
+                    id="year"
+                    value={query.year}
+                    onChange={handleChange}
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={0}>Any</option>
+                    {Array.from({ length: 145 }, (_, i) => 1880 + i).map(
+                      (year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+
+                <div className="mb-2">
+                  <label
+                    htmlFor="fstartswith"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Starts With:
+                  </label>
+                  <input
+                    type="search"
+                    id="fstartswith"
+                    value={query.fstartswith}
+                    onChange={handleChange}
+                    placeholder="Jo..."
+                    autoComplete="off"
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend className="font-medium">Last Name:</legend>
+                <div className="mb-2">
+                  <label
+                    htmlFor="race"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Race
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <select
+                      id="race"
+                      value={query.race}
+                      onChange={handleChange}
+                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="any">Any</option>
+                      <option value="pctwhite">White</option>
+                      <option value="pcthispanic">Hispanic</option>
+                      <option value="pctasian">Asian</option>
+                      <option value="pctblack">Black</option>
+                      <option value="pctnative">Native</option>
+                    </select>
+
+                    <input
+                      type="number"
+                      id="racePercent"
+                      value={query.racePercent}
+                      onChange={handleRacePercentChange}
+                      min="0"
+                      max="99"
+                      className="mt-1 block w-20 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <label
+                    htmlFor="frequency"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Popularity
+                  </label>
+                  <select
+                    id="frequency"
+                    value={query.frequency}
+                    onChange={handleChange}
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="any">Any</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div className="mb-2">
+                  <label
+                    htmlFor="sstartswith"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Starts With:
+                  </label>
+                  <input
+                    type="search"
+                    id="sstartswith"
+                    value={query.sstartswith}
+                    onChange={handleChange}
+                    placeholder="Smi..."
+                    autoComplete="off"
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </fieldset>
+            </form>
           </div>
-          <div className="settings">
-            <a href="#" className="settingsBtn">
-              <i className="fa fa-chevron-down"></i>
-            </a>
-          </div>
-        </header>
-      </div>
-      <div id="ranndy">
-        {error && <div className="error-message">{error}</div>}{" "}
-        {/* Display error message */}
-        <div id="nameTable">
-          {names.map((name, index) => (
-            <div key={index} className="nameRow">
-              <div className="fullName">
-                <a
-                  className="searchLink"
-                  href={`http://google.com/search?q=name+meaning+${name.first}`}
+
+          {/* Names List */}
+          <div className="bg-white p-4 rounded-lg shadow col-span-2">
+            <h2 className="text-lg font-semibold mb-4">Generated Names</h2>
+            {error && <div className="text-red-500 mb-4">{error}</div>}
+            <div className="space-y-2">
+              {names.map((name, index) => (
+                <div
+                  key={index}
+                  className="p-2 border-b border-gray-200 last:border-none"
                 >
-                  {name.first}
-                </a>{" "}
-                <a
-                  className="searchLink"
-                  href={`http://google.com/search?q=surname+${name.last}`}
-                >
-                  {name.last}
-                </a>
-              </div>
+                  <a
+                    href={`https://www.google.com/search?q=name+meaning+${name.first}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {name.first}
+                  </a>{" "}
+                  <a
+                    href={`https://www.google.com/search?q=surname+${name.last}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {name.last}
+                  </a>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
