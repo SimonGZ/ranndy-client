@@ -1,50 +1,102 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 
+// Define types for your data
+interface Name {
+  first: string;
+  last: string;
+}
+
+interface Query {
+  rank: "any" | "high" | "low";
+  frequency: "any" | "high" | "medium" | "low";
+  gender: "any" | "male" | "female";
+  year: number;
+  race: string;
+  racePercent: number;
+  fstartswith: string;
+  sstartswith: string;
+}
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001"; // Use environment variable
+
 function App() {
-  const [names, setNames] = useState([]);
-  const [query, setQuery] = useState({
+  const [names, setNames] = useState<Name[]>([]);
+  const [query, setQuery] = useState<Query>({
     rank: "high",
     frequency: "high",
     gender: "female",
-    year: 0,
-    race: ["any", 50],
+    year: 0, // Use 0 for "Any" year
+    race: "any",
+    racePercent: 50,
     fstartswith: "",
     sstartswith: "",
   });
+  const [error, setError] = useState<string | null>(null); // Add error state
 
-  const getNames = async (resetFlag = false) => {
-    if (resetFlag) {
-      setNames([]);
+  const getNames = async () => {
+    setError(null); // Clear previous errors
+    try {
+      let url = `${API_URL}/api/names?`; //removed limit
+      const params = [];
+
+      // Build the query string dynamically
+      if (query.rank !== "any") params.push(`rank=${query.rank}`);
+      if (query.frequency !== "any")
+        params.push(`frequency=${query.frequency}`);
+      if (query.gender !== "any") params.push(`gender=${query.gender}`);
+      if (query.year !== 0) params.push(`year=${query.year}`);
+      if (query.race !== "any") {
+        params.push(`race=${query.race}`);
+        params.push(`race=${query.racePercent}`);
+      }
+      if (query.fstartswith) params.push(`fstartswith=${query.fstartswith}`);
+      if (query.sstartswith) params.push(`sstartswith=${query.sstartswith}`);
+
+      url += params.join("&"); // Join parameters with '&'
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        // Check for HTTP errors
+        const errorData = await response.json();
+        throw new Error(errorData.errors?.[0]?.message || "API Error");
+      }
+
+      const data = await response.json();
+
+      // Correctly map the data
+      setNames(
+        data.names.map((item: any) => ({
+          first: item.firstname.name,
+          last: item.lastname.name,
+        })),
+      );
+    } catch (err: any) {
+      setError(err.message);
+      console.error("Error fetching names:", err);
     }
-
-    const response = await fetch(
-      `https://ranndy.com/api/names?limit=100&rank=${query.rank}&frequency=${query.frequency}&gender=${query.gender}&year=${query.year}&race=${query.race}&fstartswith=${query.fstartswith}&sstartswith=${query.sstartswith}`
-    );
-    const data = await response.json();
-    setNames(
-      data.names.map((name) => ({ first: name[0].name, last: name[1].name }))
-    );
   };
 
   useEffect(() => {
     getNames();
   }, [query]);
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { id, value } = e.target;
     setQuery((prevQuery) => ({
       ...prevQuery,
-      [id]: value,
+      [id]: id === "year" ? parseInt(value) : value, // Parse year to integer
     }));
   };
 
-  const handleRaceChange = (e) => {
-    const newQuery = { ...query, race: [e.target.value, 50] };
-    if (e.target.value === "pctnative") {
-      newQuery.frequency = "any";
-    }
-    setQuery(newQuery);
+  const handleRacePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery((prevQuery) => ({
+      ...prevQuery,
+      racePercent: parseInt(e.target.value),
+    }));
   };
 
   return (
@@ -77,8 +129,14 @@ function App() {
               <div className="selector">
                 <label htmlFor="year">Year</label>
                 <select id="year" value={query.year} onChange={handleChange}>
-                  <option value="0">Any</option>
-                  {/* Add other year options here */}
+                  <option value={0}>Any</option>
+                  {Array.from({ length: 145 }, (_, i) => 1880 + i).map(
+                    (year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
               <div className="startsWith">
@@ -97,11 +155,7 @@ function App() {
               <legend>Last Name:</legend>
               <div className="selector">
                 <label htmlFor="race">Race</label>
-                <select
-                  id="race"
-                  value={query.race[0]}
-                  onChange={handleRaceChange}
-                >
+                <select id="race" value={query.race} onChange={handleChange}>
                   <option value="any">Any</option>
                   <option value="pctwhite">White</option>
                   <option value="pcthispanic">Hispanic</option>
@@ -109,6 +163,15 @@ function App() {
                   <option value="pctblack">Black</option>
                   <option value="pctnative">Native</option>
                 </select>
+                <label htmlFor="racePercent">Race %:</label>
+                <input
+                  type="number"
+                  id="racePercent"
+                  value={query.racePercent}
+                  onChange={handleRacePercentChange}
+                  min="0"
+                  max="99"
+                />
               </div>
               <div className="selector">
                 <label htmlFor="frequency">Popularity</label>
@@ -116,7 +179,7 @@ function App() {
                   id="frequency"
                   value={query.frequency}
                   onChange={handleChange}
-                  disabled={query.race[0] === "pctnative"}
+                  // Removed the client-side disable logic. The API should handle this.
                 >
                   <option value="any">Any</option>
                   <option value="high">High</option>
@@ -152,6 +215,8 @@ function App() {
         </header>
       </div>
       <div id="ranndy">
+        {error && <div className="error-message">{error}</div>}{" "}
+        {/* Display error message */}
         <div id="nameTable">
           {names.map((name, index) => (
             <div key={index} className="nameRow">
