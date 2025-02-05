@@ -53,6 +53,7 @@ function App() {
       }
       if (query.fstartswith) params.push(`fstartswith=${query.fstartswith}`);
       if (query.sstartswith) params.push(`sstartswith=${query.sstartswith}`);
+      params.push("limit=50");
 
       url += params.join("&"); // Join parameters with '&'
 
@@ -105,169 +106,171 @@ function App() {
     <div className="min-h-screen bg-gray-100 font-sans">
       {/* ONE container, wrapping everything */}
       <div className="container mx-auto p-4 max-w-5xl">
-        <header className="bg-blue-600 text-white p-4 rounded-t-lg">
+        <header className="bg-sky-700 text-white p-4 rounded-t-lg">
           <h1 className="text-2xl font-bold">Name Generator</h1>
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
           {/* Filters */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4">Filters</h2>
-            <form>
-              <fieldset className="mb-4">
-                <legend className="font-medium">First Name:</legend>
-                <div className="mb-2">
-                  <label
-                    htmlFor="gender"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Gender
-                  </label>
-                  <select
-                    id="gender"
-                    value={query.gender}
-                    onChange={handleChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="any">Any</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <label
-                    htmlFor="rank"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Popularity
-                  </label>
-                  <select
-                    id="rank"
-                    value={query.rank}
-                    onChange={handleChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="any">Any</option>
-                    <option value="high">High</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <label
-                    htmlFor="year"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Year
-                  </label>
-                  <select
-                    id="year"
-                    value={query.year}
-                    onChange={handleChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={0}>Any</option>
-                    {Array.from({ length: 145 }, (_, i) => 1880 + i).map(
-                      (year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </div>
-
-                <div className="mb-2">
-                  <label
-                    htmlFor="fstartswith"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Starts With:
-                  </label>
-                  <input
-                    type="search"
-                    id="fstartswith"
-                    value={query.fstartswith}
-                    onChange={handleChange}
-                    placeholder="Jo..."
-                    autoComplete="off"
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend className="font-medium">Last Name:</legend>
-                <div className="mb-2">
-                  <label
-                    htmlFor="race"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Race
-                  </label>
-                  <div className="flex items-center space-x-2">
+            <div id="controlBox" className="bg-sky-50 p-4 rounded-t-lg">
+              <h2 className="text-lg font-semibold mb-4">Filters</h2>
+              <form>
+                <fieldset className="mb-4">
+                  <legend className="font-medium">First Name:</legend>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="gender"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Gender
+                    </label>
                     <select
-                      id="race"
-                      value={query.race}
+                      id="gender"
+                      value={query.gender}
                       onChange={handleChange}
-                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="any">Any</option>
-                      <option value="pctwhite">White</option>
-                      <option value="pcthispanic">Hispanic</option>
-                      <option value="pctasian">Asian</option>
-                      <option value="pctblack">Black</option>
-                      <option value="pctnative">Native</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
                     </select>
+                  </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="rank"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Popularity
+                    </label>
+                    <select
+                      id="rank"
+                      value={query.rank}
+                      onChange={handleChange}
+                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="any">Any</option>
+                      <option value="high">High</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="year"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Year
+                    </label>
+                    <select
+                      id="year"
+                      value={query.year}
+                      onChange={handleChange}
+                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value={0}>Any</option>
+                      {Array.from({ length: 145 }, (_, i) => 1880 + i).map(
+                        (year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
 
+                  <div className="mb-2">
+                    <label
+                      htmlFor="fstartswith"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Starts With:
+                    </label>
                     <input
-                      type="number"
-                      id="racePercent"
-                      value={query.racePercent}
-                      onChange={handleRacePercentChange}
-                      min="0"
-                      max="99"
-                      className="mt-1 block w-20 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      type="search"
+                      id="fstartswith"
+                      value={query.fstartswith}
+                      onChange={handleChange}
+                      placeholder="Jo..."
+                      autoComplete="off"
+                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
-                </div>
-                <div className="mb-2">
-                  <label
-                    htmlFor="frequency"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Popularity
-                  </label>
-                  <select
-                    id="frequency"
-                    value={query.frequency}
-                    onChange={handleChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="any">Any</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <label
-                    htmlFor="sstartswith"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Starts With:
-                  </label>
-                  <input
-                    type="search"
-                    id="sstartswith"
-                    value={query.sstartswith}
-                    onChange={handleChange}
-                    placeholder="Smi..."
-                    autoComplete="off"
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </fieldset>
-            </form>
+                </fieldset>
+
+                <fieldset>
+                  <legend className="font-medium">Last Name:</legend>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="race"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Race
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <select
+                        id="race"
+                        value={query.race}
+                        onChange={handleChange}
+                        className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="any">Any</option>
+                        <option value="pctwhite">White</option>
+                        <option value="pcthispanic">Hispanic</option>
+                        <option value="pctasian">Asian</option>
+                        <option value="pctblack">Black</option>
+                        <option value="pctnative">Native</option>
+                      </select>
+
+                      <input
+                        type="number"
+                        id="racePercent"
+                        value={query.racePercent}
+                        onChange={handleRacePercentChange}
+                        min="0"
+                        max="99"
+                        className="bg-white mt-1 block w-20 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="frequency"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Popularity
+                    </label>
+                    <select
+                      id="frequency"
+                      value={query.frequency}
+                      onChange={handleChange}
+                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="any">Any</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="sstartswith"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Starts With:
+                    </label>
+                    <input
+                      type="search"
+                      id="sstartswith"
+                      value={query.sstartswith}
+                      onChange={handleChange}
+                      placeholder="Smi..."
+                      autoComplete="off"
+                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </fieldset>
+              </form>
+            </div>
           </div>
 
           {/* Names List */}
@@ -278,7 +281,11 @@ function App() {
               {names.map((name, index) => (
                 <div
                   key={index}
-                  className="p-2 border-b border-gray-200 last:border-none"
+                  className={
+                    index % 2 === 0 // Alternate background colors
+                      ? "p-2 bg-gray-50 border-b border-gray-200 last:border-none text-lg" //Even
+                      : "p-2 border-b border-gray-200 last:border-none text-lg" //Odd
+                  }
                 >
                   <a
                     href={`https://www.google.com/search?q=name+meaning+${name.first}`}
