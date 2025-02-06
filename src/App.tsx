@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 import "./App.css";
 
 // Define types for your data
@@ -23,25 +24,25 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 function App() {
   const [names, setNames] = useState<Name[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const [query, setQuery] = useState<Query>({
     rank: "high",
     frequency: "high",
     gender: "female",
-    year: 0, // Use 0 for "Any" year
+    year: 0,
     race: "any",
     racePercent: 50,
     fstartswith: "",
     sstartswith: "",
   });
-  const [error, setError] = useState<string | null>(null); // Add error state
+  const [error, setError] = useState<string | null>(null);
 
-  const getNames = async () => {
-    setError(null); // Clear previous errors
+  const getNames = async (isInitial: boolean = false) => {
+    setError(null);
     try {
-      let url = `${API_URL}/api/names?`; //removed limit
+      let url = `${API_URL}/api/names?`;
       const params = [];
 
-      // Build the query string dynamically
       if (query.rank !== "any") params.push(`rank=${query.rank}`);
       if (query.frequency !== "any")
         params.push(`frequency=${query.frequency}`);
@@ -55,34 +56,39 @@ function App() {
       if (query.sstartswith) params.push(`sstartswith=${query.sstartswith}`);
       params.push("limit=50");
 
-      url += params.join("&"); // Join parameters with '&'
+      url += params.join("&");
 
       const response = await fetch(url);
 
       if (!response.ok) {
-        // Check for HTTP errors
         const errorData = await response.json();
         throw new Error(errorData.errors?.[0]?.message || "API Error");
       }
 
       const data = await response.json();
-      // Correctly map the data
-      setNames(
-        data.names.map((item: any[]) => ({
-          // Type item as an array
-          first: item[0] ? item[0].name : "N/A", // Access first element, check for null
-          last: item[1] ? item[1].name : "N/A", // Access second element, check for null
-          gender: item[0] ? item[0].gender : "N/A",
-        })),
-      );
+      const newNames = data.names.map((item: any[]) => ({
+        first: item[0] ? item[0].name : "N/A",
+        last: item[1] ? item[1].name : "N/A",
+        gender: item[0] ? item[0].gender : "N/A",
+      }));
+
+      // If this is an initial load (from filter change), replace the names
+      // Otherwise, append the new names to the existing list
+      setNames(isInitial ? newNames : [...names, ...newNames]);
+
+      // Set hasMore based on whether we got a full page of results
+      setHasMore(newNames.length === 50);
     } catch (err: any) {
       setError(err.message);
       console.error("Error fetching names:", err);
     }
   };
 
+  // Initial load when filters change
   useEffect(() => {
-    getNames();
+    getNames(true);
+    // Scroll to top when query changes
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [query]);
 
   const handleChange = (
@@ -91,7 +97,7 @@ function App() {
     const { id, value } = e.target;
     setQuery((prevQuery) => ({
       ...prevQuery,
-      [id]: id === "year" ? parseInt(value) : value, // Parse year to integer
+      [id]: id === "year" ? parseInt(value) : value,
     }));
   };
 
@@ -104,14 +110,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      {/* ONE container, wrapping everything */}
       <div className="container mx-auto p-4 max-w-5xl">
         <header className="bg-sky-700 text-white p-4 rounded-t-lg">
           <h1 className="text-2xl font-bold">Name Generator</h1>
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
-          {/* Filters */}
+          {/* Filters - Same as before */}
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="bg-white sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
               <h2 className="text-lg font-semibold mb-4">Filters</h2>
@@ -273,39 +278,54 @@ function App() {
             </div>
           </div>
 
-          {/* Names List */}
+          {/* Names List with Infinite Scroll */}
           <div className="bg-white p-4 rounded-lg shadow col-span-2">
             <h2 className="text-lg font-semibold mb-4">Generated Names</h2>
             {error && <div className="text-red-500 mb-4">{error}</div>}
-            <div className="space-y-2">
-              {names.map((name, index) => (
-                <div
-                  key={index}
-                  className={
-                    index % 2 === 0 // Alternate background colors
-                      ? "p-2 bg-gray-50 border-b border-gray-200 last:border-none text-lg" //Even
-                      : "p-2 border-b border-gray-200 last:border-none text-lg" //Odd
-                  }
-                >
-                  <a
-                    href={`https://www.google.com/search?q=name+meaning+${name.first}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {name.first}
-                  </a>{" "}
-                  <a
-                    href={`https://www.google.com/search?q=surname+${name.last}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {name.last}
-                  </a>
+
+            <InfiniteScroll
+              dataLength={names.length}
+              next={() => getNames(false)}
+              hasMore={hasMore}
+              loader={
+                <div className="text-center p-4">Loading more names...</div>
+              }
+              endMessage={
+                <div className="text-center p-4 text-gray-500">
+                  No more names to load.
                 </div>
-              ))}
-            </div>
+              }
+            >
+              <div className="space-y-2">
+                {names.map((name, index) => (
+                  <div
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? "p-2 bg-gray-50 border-b border-gray-200 last:border-none text-lg"
+                        : "p-2 border-b border-gray-200 last:border-none text-lg"
+                    }
+                  >
+                    <a
+                      href={`https://www.google.com/search?q=name+meaning+${name.first}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {name.first}
+                    </a>{" "}
+                    <a
+                      href={`https://www.google.com/search?q=surname+${name.last}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {name.last}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </InfiniteScroll>
           </div>
         </div>
       </div>
