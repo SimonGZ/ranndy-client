@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import "./App.css";
 
@@ -35,6 +35,7 @@ function App() {
     fstartswith: "",
     sstartswith: "",
   });
+  const scrollTimeoutRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const getNames = async (isInitial: boolean = false) => {
@@ -87,8 +88,26 @@ function App() {
   // Initial load when filters change
   useEffect(() => {
     getNames(true);
-    // Scroll to top when query changes
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [query]);
+
+  // Handle scrolling separately
+  useEffect(() => {
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current !== null) {
+      window.clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Set a new timeout to scroll after a brief delay
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
+
+    // Cleanup
+    return () => {
+      if (scrollTimeoutRef.current !== null) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+    };
   }, [query]);
 
   const handleChange = (
