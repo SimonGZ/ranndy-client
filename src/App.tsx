@@ -48,7 +48,7 @@ function App() {
       if (query.frequency !== "any")
         params.push(`frequency=${query.frequency}`);
       if (query.gender !== "any") params.push(`gender=${query.gender}`);
-      if (query.year !== 0) params.push(`year=${query.year}`);
+      params.push(`year=${query.year}`);
       if (query.race !== "any") {
         params.push(`race=${query.race}`);
         params.push(`race=${query.racePercent}`);
@@ -192,7 +192,7 @@ function App() {
                       className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value={0}>Any</option>
-                      {Array.from({ length: 145 }, (_, i) => 1880 + i).map(
+                      {Array.from({ length: 144 }, (_, i) => 1880 + i).map(
                         (year) => (
                           <option key={year} value={year}>
                             {year}
