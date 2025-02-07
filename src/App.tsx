@@ -138,7 +138,7 @@ function App() {
           {/* Filters - Same as before */}
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="bg-white sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
-              <h2 className="text-lg font-semibold mb-4">Filters</h2>
+              <h2 className="text-xl font-semibold mb-4">Filters</h2>
               <form>
                 <fieldset className="mb-4">
                   <legend className="font-medium">First Name:</legend>
@@ -230,7 +230,7 @@ function App() {
                     >
                       Race
                     </label>
-                    <div className="flex items-center space-x-2">
+                    <div className="space-y-2">
                       <select
                         id="race"
                         value={query.race}
@@ -245,15 +245,25 @@ function App() {
                         <option value="pctnative">Native</option>
                       </select>
 
-                      <input
-                        type="number"
-                        id="racePercent"
-                        value={query.racePercent}
-                        onChange={handleRacePercentChange}
-                        min="0"
-                        max="99"
-                        className="bg-white mt-1 block w-20 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      {query.race !== "any" && (
+                        <div>
+                          <label
+                            htmlFor="racePercent"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Race Percentile
+                          </label>
+                          <input
+                            type="number"
+                            id="racePercent"
+                            value={query.racePercent}
+                            onChange={handleRacePercentChange}
+                            min="0"
+                            max="99"
+                            className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="mb-2">
