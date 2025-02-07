@@ -68,9 +68,9 @@ function App() {
 
       const data = await response.json();
       const newNames = data.names.map((item: any[]) => ({
-        first: item[0] ? item[0].name : "N/A",
-        last: item[1] ? item[1].name : "N/A",
-        gender: item[0] ? item[0].gender : "N/A",
+        first: item[0] ? item[0].name : "NoneMatching",
+        last: item[1] ? item[1].name : "NoneMatching",
+        gender: item[0] ? item[0].gender : "NoneMatching",
       }));
 
       // If this is an initial load (from filter change), replace the names
