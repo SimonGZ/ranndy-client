@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import DropdownList from "react-widgets/DropdownList";
 import "./App.css";
+import "react-widgets/styles.css";
 
 // Define types for your data
 interface Name {
@@ -120,12 +122,35 @@ function App() {
     }));
   };
 
+  const handleYearChange = (newYear: YearOption) => {
+    setQuery((prevQuery) => ({
+      ...prevQuery,
+      year: newYear.year,
+    }));
+  };
+
   const handleRacePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery((prevQuery) => ({
       ...prevQuery,
       racePercent: parseInt(e.target.value),
     }));
   };
+
+  type YearOption = {
+    year: number;
+    display: string;
+  };
+
+  const yearsList: YearOption[] = [
+    ...Array.from({ length: 144 }, (_, i) => {
+      const year = 1880 + i;
+      return {
+        year,
+        display: year.toString(),
+      };
+    }),
+    { year: 0, display: "Any" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -185,21 +210,13 @@ function App() {
                     >
                       Year
                     </label>
-                    <select
-                      id="year"
-                      value={query.year}
-                      onChange={handleChange}
-                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value={0}>Any</option>
-                      {Array.from({ length: 144 }, (_, i) => 1880 + i).map(
-                        (year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ),
-                      )}
-                    </select>
+                    <DropdownList
+                      data={yearsList}
+                      dataKey="year"
+                      textField="display"
+                      defaultValue={0}
+                      onChange={handleYearChange}
+                    />
                   </div>
 
                   <div className="mb-2">
