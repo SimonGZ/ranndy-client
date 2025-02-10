@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import DropdownList from "react-widgets/DropdownList";
+import { useTheme } from "./ThemeContext";
+import { Moon, Sun } from "lucide-react";
 import "./App.css";
 import "react-widgets/styles.css";
 
@@ -151,26 +153,39 @@ function App() {
     }),
     { year: 0, display: "Any" },
   ];
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  // ... (keep your existing state and functions)
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
+    <div className="min-h-screen font-sans dark:bg-gray-900">
       <div className="container mx-auto p-4 max-w-5xl">
-        <header className="bg-sky-700 text-white p-4 rounded-t-lg">
+        <header className="bg-sky-700 dark:bg-sky-900 text-white p-4 rounded-t-lg flex justify-between items-center">
           <h1 className="text-2xl font-bold">Name Generator</h1>
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+          </button>
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
-          {/* Filters - Same as before */}
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="bg-white sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Filters</h2>
+          {/* Filters */}
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="bg-white dark:bg-gray-800 sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 dark:text-white">
+                Filters
+              </h2>
               <form>
                 <fieldset className="mb-4">
-                  <legend className="font-medium">First Name:</legend>
+                  <legend className="font-medium dark:text-white">
+                    First Name:
+                  </legend>
                   <div className="mb-2">
                     <label
                       htmlFor="gender"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Gender
                     </label>
@@ -178,7 +193,7 @@ function App() {
                       id="gender"
                       value={query.gender}
                       onChange={handleChange}
-                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="any">Any</option>
                       <option value="female">Female</option>
@@ -188,7 +203,7 @@ function App() {
                   <div className="mb-2">
                     <label
                       htmlFor="rank"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Popularity
                     </label>
@@ -196,7 +211,7 @@ function App() {
                       id="rank"
                       value={query.rank}
                       onChange={handleChange}
-                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="any">Any</option>
                       <option value="high">High</option>
@@ -206,7 +221,7 @@ function App() {
                   <div className="mb-2">
                     <label
                       htmlFor="year"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Year
                     </label>
@@ -222,7 +237,7 @@ function App() {
                   <div className="mb-2">
                     <label
                       htmlFor="fstartswith"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Starts With:
                     </label>
@@ -233,17 +248,19 @@ function App() {
                       onChange={handleChange}
                       placeholder="Jo..."
                       autoComplete="off"
-                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </fieldset>
 
                 <fieldset>
-                  <legend className="font-medium">Last Name:</legend>
+                  <legend className="font-medium dark:text-white">
+                    Last Name:
+                  </legend>
                   <div className="mb-2">
                     <label
                       htmlFor="race"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Race
                     </label>
@@ -252,7 +269,7 @@ function App() {
                         id="race"
                         value={query.race}
                         onChange={handleChange}
-                        className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="any">Any</option>
                         <option value="pctwhite">White</option>
@@ -266,7 +283,7 @@ function App() {
                         <div>
                           <label
                             htmlFor="racePercent"
-                            className="block text-sm font-medium text-gray-700"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                           >
                             Race Percentile
                           </label>
@@ -277,7 +294,7 @@ function App() {
                             onChange={handleRacePercentChange}
                             min="0"
                             max="99"
-                            className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                           />
                         </div>
                       )}
@@ -286,7 +303,7 @@ function App() {
                   <div className="mb-2">
                     <label
                       htmlFor="frequency"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Popularity
                     </label>
@@ -294,7 +311,7 @@ function App() {
                       id="frequency"
                       value={query.frequency}
                       onChange={handleChange}
-                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="any">Any</option>
                       <option value="high">High</option>
@@ -305,7 +322,7 @@ function App() {
                   <div className="mb-2">
                     <label
                       htmlFor="sstartswith"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Starts With:
                     </label>
@@ -316,7 +333,7 @@ function App() {
                       onChange={handleChange}
                       placeholder="Smi..."
                       autoComplete="off"
-                      className="bg-white mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </fieldset>
@@ -324,9 +341,11 @@ function App() {
             </div>
           </div>
 
-          {/* Names List with Infinite Scroll */}
-          <div className="bg-white p-4 rounded-lg shadow col-span-2">
-            <h2 className="text-lg font-semibold mb-4">Generated Names</h2>
+          {/* Names List */}
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow col-span-2">
+            <h2 className="text-lg font-semibold mb-4 dark:text-white">
+              Generated Names
+            </h2>
             {error && <div className="text-red-500 mb-4">{error}</div>}
 
             <InfiniteScroll
@@ -334,10 +353,12 @@ function App() {
               next={() => getNames(false)}
               hasMore={hasMore}
               loader={
-                <div className="text-center p-4">Loading more names...</div>
+                <div className="text-center p-4 dark:text-gray-300">
+                  Loading more names...
+                </div>
               }
               endMessage={
-                <div className="text-center p-4 text-gray-500">
+                <div className="text-center p-4 text-gray-500 dark:text-gray-400">
                   No more names to load.
                 </div>
               }
@@ -348,15 +369,15 @@ function App() {
                     key={index}
                     className={
                       index % 2 === 0
-                        ? "p-2 bg-gray-50 border-b border-gray-200 last:border-none text-lg"
-                        : "p-2 border-b border-gray-200 last:border-none text-lg"
+                        ? "p-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none text-lg dark:text-white"
+                        : "p-2 border-b border-gray-200 dark:border-gray-600 last:border-none text-lg dark:text-white"
                     }
                   >
                     <a
                       href={`https://www.google.com/search?q=name+meaning+${name.first}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {name.first}
                     </a>{" "}
@@ -364,7 +385,7 @@ function App() {
                       href={`https://www.google.com/search?q=surname+${name.last}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {name.last}
                     </a>
