@@ -369,8 +369,8 @@ function App() {
                     key={index}
                     className={
                       index % 2 === 0
-                        ? "p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none text-lg dark:text-white"
-                        : "p-3 border-b border-gray-200 dark:border-gray-600 last:border-none text-lg dark:text-white"
+                        ? "p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none text-xl dark:text-white"
+                        : "p-3 border-b border-gray-200 dark:border-gray-600 last:border-none text-xl dark:text-white"
                     }
                   >
                     <a
