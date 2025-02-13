@@ -363,7 +363,7 @@ function App() {
                 </div>
               }
             >
-              <div className="">
+              <div className="text-center font-semibold">
                 {names.map((name, index) => (
                   <div
                     key={index}
