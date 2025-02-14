@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Name } from "./types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import DropdownList from "react-widgets/DropdownList";
+import NameDrawer from "./components/NameDrawer";
 import { useTheme } from "./ThemeContext";
 import { Moon, Sun } from "lucide-react";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 import "react-widgets/styles.css";
-
-// Define types for your data
-interface Name {
-  first: string;
-  last: string;
-  gender: string;
-}
 
 interface Query {
   rank: "any" | "high" | "low";
@@ -41,6 +37,81 @@ function App() {
   });
   const scrollTimeoutRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedName, setSelectedName] = useState<Name | null>(null);
+  const [favorites, setFavorites] = useLocalStorage<Name[]>("favorites", []);
+  const [lockedFirstName, setLockedFirstName] = useState<Name | null>(null);
+  const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
+
+  // Handler functions
+  const handleNameClick = (name: Name) => {
+    setSelectedName(name);
+  };
+
+  const handleDrawerClose = () => {
+    setSelectedName(null);
+  };
+
+  const handleFavorite = (name: Name) => {
+    console.log(`handleFavorite called with ${name}`);
+    const isFavorite = favorites.some(
+      (f) => f.first === name.first && f.last === name.last,
+    );
+
+    if (isFavorite) {
+      setFavorites(
+        favorites.filter((f) => f.first !== name.first || f.last !== name.last),
+      );
+    } else {
+      setFavorites([...favorites, name]);
+    }
+  };
+
+  const handleLockFirst = (name: Name) => {
+    if (lockedFirstName?.first === name.first) {
+      setLockedFirstName(null);
+      setQuery((prev) => ({
+        ...prev,
+        fstartswith: "",
+      }));
+    } else {
+      setLockedFirstName(name);
+      setQuery((prev) => ({
+        ...prev,
+        fstartswith: name.first + "^",
+      }));
+    }
+  };
+
+  const handleLockLast = (name: Name) => {
+    if (lockedLastName?.last === name.last) {
+      setLockedLastName(null);
+      setQuery((prev) => ({
+        ...prev,
+        sstartswith: "",
+      }));
+    } else {
+      setLockedLastName(name);
+      setQuery((prev) => ({
+        ...prev,
+        sstartswith: name.last + "^",
+      }));
+    }
+  };
+
+  // Helper functions to check status
+  const isNameFavorite = (name: Name) => {
+    return favorites.some(
+      (f) => f.first === name.first && f.last === name.last,
+    );
+  };
+
+  const isFirstNameLocked = (name: Name) => {
+    return lockedFirstName?.first === name.first;
+  };
+
+  const isLastNameLocked = (name: Name) => {
+    return lockedLastName?.last === name.last;
+  };
 
   const getNames = async (isInitial: boolean = false) => {
     setError(null);
@@ -367,34 +438,36 @@ function App() {
                 {names.map((name, index) => (
                   <div
                     key={index}
+                    onClick={() => handleNameClick(name)}
                     className={
                       index % 2 === 0
-                        ? "p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none text-xl dark:text-white"
-                        : "p-3 border-b border-gray-200 dark:border-gray-600 last:border-none text-xl dark:text-white"
+                        ? "cursor-pointer p-3 bg-gray-50 hover:bg-blue-500 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none text-xl dark:text-white"
+                        : "cursor-pointer p-3 border-b border-gray-200 hover:bg-blue-500 dark:border-gray-600 last:border-none text-xl dark:text-white"
                     }
                   >
-                    <a
-                      href={`https://www.google.com/search?q=name+meaning+${name.first}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {name.first}
-                    </a>{" "}
-                    <a
-                      href={`https://www.google.com/search?q=surname+${name.last}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {name.last}
-                    </a>
+                    {name.first} {name.last}
                   </div>
                 ))}
               </div>
             </InfiniteScroll>
           </div>
         </div>
+        {/* Drawer component with all necessary props */}
+        <NameDrawer
+          name={selectedName}
+          isOpen={!!selectedName}
+          onClose={handleDrawerClose}
+          onFavorite={handleFavorite}
+          onLockFirst={handleLockFirst}
+          onLockLast={handleLockLast}
+          isFavorite={selectedName ? isNameFavorite(selectedName) : false}
+          isFirstNameLocked={
+            selectedName ? isFirstNameLocked(selectedName) : false
+          }
+          isLastNameLocked={
+            selectedName ? isLastNameLocked(selectedName) : false
+          }
+        />
       </div>
     </div>
   );
