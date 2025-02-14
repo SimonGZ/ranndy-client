@@ -4,7 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import DropdownList from "react-widgets/DropdownList";
 import NameDrawer from "./components/NameDrawer";
 import { useTheme } from "./ThemeContext";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Filter, X } from "lucide-react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 import "react-widgets/styles.css";
@@ -41,6 +41,7 @@ function App() {
   const [favorites, setFavorites] = useLocalStorage<Name[]>("favorites", []);
   const [lockedFirstName, setLockedFirstName] = useState<Name | null>(null);
   const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Handler functions
   const handleNameClick = (name: Name) => {
@@ -225,29 +226,56 @@ function App() {
     { year: 0, display: "Any" },
   ];
   const { isDarkMode, toggleDarkMode } = useTheme();
-  // ... (keep your existing state and functions)
 
   return (
     <div className="min-h-screen font-sans dark:bg-gray-900">
       <div className="container mx-auto p-4 max-w-5xl">
         <header className="bg-sky-700 dark:bg-sky-900 text-white p-4 rounded-t-lg flex justify-between items-center">
           <h1 className="text-2xl font-bold">Name Generator</h1>
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="sm:hidden p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
+              aria-label="Toggle filters"
+            >
+              <Filter size={24} />
+            </button>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
           {/* Filters */}
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+          <div
+            className={`
+  ${showFilters ? "block" : "hidden"}
+  sm:block /* Always show on desktop */
+  bg-white dark:bg-gray-800
+  p-4 rounded-lg shadow
+  sm:sticky /* Fixed position on mobile, static on desktop */
+  transition-all duration-300
+`}
+          >
             <div className="bg-white dark:bg-gray-800 sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4 dark:text-white">
-                Filters
-              </h2>
+              {/* Add a close button for mobile */}
+              <div className="flex justify-between items-center sm:hidden mb-4">
+                <h2 className="text-xl font-semibold dark:text-white">
+                  Filters
+                </h2>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label="Close filters"
+                >
+                  <X size={24} />
+                </button>
+              </div>
               <form>
                 <fieldset className="mb-4">
                   <legend className="font-medium dark:text-white">
