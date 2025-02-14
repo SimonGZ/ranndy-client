@@ -4,7 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import DropdownList from "react-widgets/DropdownList";
 import NameDrawer from "./components/NameDrawer";
 import { useTheme } from "./ThemeContext";
-import { Moon, Sun, Filter, X } from "lucide-react";
+import { Moon, Sun, Filter, X, Heart } from "lucide-react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 import "react-widgets/styles.css";
@@ -42,6 +42,7 @@ function App() {
   const [lockedFirstName, setLockedFirstName] = useState<Name | null>(null);
   const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
   const [showFilters, setShowFilters] = useState(true);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   // Handler functions
   const handleNameClick = (name: Name) => {
@@ -112,6 +113,11 @@ function App() {
 
   const isLastNameLocked = (name: Name) => {
     return lockedLastName?.last === name.last;
+  };
+
+  const handleFavoriteClick = (name: Name, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the drawer
+    handleFavorite(name);
   };
 
   const getNames = async (isInitial: boolean = false) => {
@@ -241,6 +247,21 @@ function App() {
               <Filter size={24} />
             </button>
             <button
+              onClick={() => setShowFavorites(!showFavorites)}
+              className="sm:hidden p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors relative group"
+              aria-label="Toggle favorites"
+            >
+              <Heart
+                size={24}
+                className={favorites.length > 0 ? "fill-current" : ""}
+              />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {favorites.length}
+                </span>
+              )}
+            </button>
+            <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
               aria-label="Toggle dark mode"
@@ -251,26 +272,35 @@ function App() {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
-          {/* Filters */}
+          {/* Sidebar Container */}
           <div
             className={`
-  ${showFilters ? "block" : "hidden"}
-  sm:block /* Always show on desktop */
-  bg-white dark:bg-gray-800
-  p-4 rounded-lg shadow
-  sm:sticky /* Fixed position on mobile, static on desktop */
-  transition-all duration-300
-`}
+              ${showFilters || showFavorites ? "block" : "hidden"}
+              sm:block
+              bg-white dark:bg-gray-800
+              p-4 rounded-lg shadow
+              transition-all duration-300
+            `}
           >
-            <div className="bg-white dark:bg-gray-800 sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
+            {/* Filters Content */}
+            <div
+              className={`
+                        ${showFilters ? "block" : "hidden"}
+                        sm:block
+                        bg-white dark:bg-gray-800
+                        sm:sticky sm:top-4
+                        p-4 pt-0
+                        rounded-lg shadow
+                      `}
+            >
               {/* Add a close button for mobile */}
-              <div className="flex justify-between items-center sm:hidden mb-4">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold dark:text-white">
                   Filters
                 </h2>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 sm:hidden"
                   aria-label="Close filters"
                 >
                   <X size={24} />
@@ -438,7 +468,60 @@ function App() {
                 </fieldset>
               </form>
             </div>
+
+            <div
+              className={`
+        ${showFavorites ? "block" : "hidden"}
+        sm:block
+        sm:sticky sm:top-148
+        mt-4
+        border-t dark:border-gray-700
+        py-4
+      `}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold dark:text-white">
+                  Favorites ({favorites.length})
+                </h2>
+                <button
+                  onClick={() => setShowFavorites(false)}
+                  className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label="Close favorites"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {favorites.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                  No favorites yet
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {favorites.map((name, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleNameClick(name)}
+                      className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      <span className="dark:text-white">
+                        {name.first} {name.last}
+                      </span>
+                      <button
+                        onClick={(e) => handleFavoriteClick(name, e)}
+                        className="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
+                        aria-label={`Remove ${name.first} ${name.last} from favorites`}
+                      >
+                        <Heart size={20} className="fill-current" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* End Sidebar */}
 
           {/* Names List */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow col-span-2">
