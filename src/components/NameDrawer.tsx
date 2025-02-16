@@ -55,7 +55,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
             onClick={handleCloseClick}
             className="cursor-pointer p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <X size={24} />
+            <X size={24} className="dark:text-white" />
           </button>
         </div>
 
@@ -65,7 +65,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
           </h3>
         </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-4 dark:text-white">
           <button
             onClick={handleFavoriteClick}
             className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-pink-100 dark:bg-pink-900 hover:bg-pink-200 dark:hover:bg-pink-800"

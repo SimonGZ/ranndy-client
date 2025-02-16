@@ -241,19 +241,19 @@ function App() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="sm:hidden p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
+              className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
               aria-label="Toggle filters"
             >
-              <Filter size={24} />
+              <Filter size={24} className={showFilters ? "fill-current" : ""} />
             </button>
             <button
               onClick={() => setShowFavorites(!showFavorites)}
-              className="sm:hidden p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors relative group"
+              className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors relative group"
               aria-label="Toggle favorites"
             >
               <Heart
                 size={24}
-                className={favorites.length > 0 ? "fill-current" : ""}
+                className={showFavorites ? "fill-current" : ""}
               />
               {favorites.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -276,7 +276,6 @@ function App() {
           <div
             className={`
               ${showFilters || showFavorites ? "block" : "hidden"}
-              sm:block
               bg-white dark:bg-gray-800
               p-4 rounded-lg shadow
               transition-all duration-300
@@ -286,7 +285,6 @@ function App() {
             <div
               className={`
                         ${showFilters ? "block" : "hidden"}
-                        sm:block
                         bg-white dark:bg-gray-800
                         sm:sticky sm:top-4
                         p-4 pt-0
@@ -471,13 +469,12 @@ function App() {
 
             <div
               className={`
-        ${showFavorites ? "block" : "hidden"}
-        sm:block
-        sm:sticky sm:top-148
-        mt-4
-        border-t dark:border-gray-700
-        py-4
-      `}
+                ${showFavorites ? "block" : "hidden"}
+                sm:sticky ${showFilters ? "sm:top-148" : "sm-top-4"}
+                mt-4
+                border-t dark:border-gray-700
+                py-4
+                `}
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold dark:text-white">
@@ -524,7 +521,13 @@ function App() {
           {/* End Sidebar */}
 
           {/* Names List */}
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow col-span-2">
+          <div
+            className={`
+            bg-white dark:bg-gray-800
+            p-4 rounded-lg shadow
+            ${!showFilters && !showFavorites ? "col-span-full px-8" : "col-span-2"}
+          `}
+          >
             <h2 className="text-lg font-semibold mb-4 dark:text-white">
               Generated Names
             </h2>
@@ -545,15 +548,15 @@ function App() {
                 </div>
               }
             >
-              <div className="text-center font-semibold">
+              <div className="text-center font-semibold text-2xl">
                 {names.map((name, index) => (
                   <div
                     key={index}
                     onClick={() => handleNameClick(name)}
                     className={
                       index % 2 === 0
-                        ? "cursor-pointer p-3 bg-gray-50 hover:bg-blue-500 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none text-xl dark:text-white"
-                        : "cursor-pointer p-3 border-b border-gray-200 hover:bg-blue-500 dark:border-gray-600 last:border-none text-xl dark:text-white"
+                        ? "cursor-pointer p-3 bg-gray-50 hover:bg-blue-500 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none dark:text-white"
+                        : "cursor-pointer p-3 border-b border-gray-200 hover:bg-blue-500 dark:border-gray-600 last:border-none dark:text-white"
                     }
                   >
                     {name.first} {name.last}
