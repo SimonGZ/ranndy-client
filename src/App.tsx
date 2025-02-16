@@ -7,6 +7,7 @@ import { useTheme } from "./ThemeContext";
 import { Moon, Sun, Filter, X, Heart } from "lucide-react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
+import "./dropdown-custom.css";
 import "react-widgets/styles.css";
 
 interface Query {
@@ -358,6 +359,8 @@ function App() {
                       textField="display"
                       defaultValue={0}
                       onChange={handleYearChange}
+                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      containerClassName="dark:bg-gray-700 dark:text-white"
                     />
                   </div>
 

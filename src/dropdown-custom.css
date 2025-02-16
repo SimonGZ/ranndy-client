@@ -1,0 +1,56 @@
+/* dropdown-custom.css */
+.dark .rw-widget {
+    background-color: rgb(55 65 81); /* dark:bg-gray-700 */
+    border-color: rgb(75 85 99); /* dark:border-gray-600 */
+    color: white;
+}
+
+.dark .rw-widget-picker {
+    background-color: rgb(55 65 81);
+    border-color: rgb(75 85 99);
+    color: white;
+}
+
+.dark .rw-list-option:hover {
+    background-color: rgb(75 85 99);
+}
+
+.dark .rw-list-option {
+    color: white;
+}
+
+.dark .rw-list-option.rw-state-selected {
+    background-color: rgb(59 130 246); /* blue-500 */
+    color: white;
+}
+
+.dark .rw-list-option:hover,
+.dark .rw-list-option-create:hover,
+.dark
+    [data-intent="keyboard"]
+    .rw-list-option.rw-state-focus:not(.rw-state-selected),
+.dark
+    [data-intent="keyboard"]
+    .rw-state-focus.rw-list-option-create:not(.rw-state-selected) {
+    background-color: rgb(75 85 99);
+    border-color: rgb(75 85 99);
+}
+
+.dark .rw-popup {
+    background-color: rgb(55 65 81);
+    border-color: rgb(75 85 99);
+    color: white;
+}
+
+.dark .rw-list {
+    background-color: rgb(55 65 81);
+    color: white;
+}
+
+.dark .rw-dropdown-list-input {
+    color: white;
+}
+
+.dark .rw-btn {
+    color: white;
+}
