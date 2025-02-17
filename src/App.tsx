@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Name } from "./types";
 import InfiniteScroll from "react-infinite-scroll-component";
-import DropdownList from "react-widgets/DropdownList";
 import NameDrawer from "./components/NameDrawer";
+import Filters from "./components/Filters";
 import { useTheme } from "./ThemeContext";
 import { Moon, Sun, Filter, X, Heart } from "lucide-react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -193,45 +193,6 @@ function App() {
     };
   }, [query]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { id, value } = e.target;
-    setQuery((prevQuery) => ({
-      ...prevQuery,
-      [id]: id === "year" ? parseInt(value) : value,
-    }));
-  };
-
-  const handleYearChange = (newYear: YearOption) => {
-    setQuery((prevQuery) => ({
-      ...prevQuery,
-      year: newYear.year,
-    }));
-  };
-
-  const handleRacePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery((prevQuery) => ({
-      ...prevQuery,
-      racePercent: parseInt(e.target.value),
-    }));
-  };
-
-  type YearOption = {
-    year: number;
-    display: string;
-  };
-
-  const yearsList: YearOption[] = [
-    ...Array.from({ length: 144 }, (_, i) => {
-      const year = 1880 + i;
-      return {
-        year,
-        display: year.toString(),
-      };
-    }),
-    { year: 0, display: "Any" },
-  ];
   const { isDarkMode, toggleDarkMode } = useTheme();
 
   return (
@@ -283,192 +244,18 @@ function App() {
             `}
           >
             {/* Filters Content */}
-            <div
-              className={`
-                        ${showFilters ? "block" : "hidden"}
-                        bg-white dark:bg-gray-800
-                        sm:sticky sm:top-4
-                        p-4 pt-0
-                        rounded-lg shadow
-                      `}
-            >
-              {/* Add a close button for mobile */}
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold dark:text-white">
-                  Filters
-                </h2>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 sm:hidden"
-                  aria-label="Close filters"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-              <form>
-                <fieldset className="mb-4">
-                  <legend className="font-medium dark:text-white">
-                    First Name:
-                  </legend>
-                  <div className="mb-2">
-                    <label
-                      htmlFor="gender"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Gender
-                    </label>
-                    <select
-                      id="gender"
-                      value={query.gender}
-                      onChange={handleChange}
-                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="any">Any</option>
-                      <option value="female">Female</option>
-                      <option value="male">Male</option>
-                    </select>
-                  </div>
-                  <div className="mb-2">
-                    <label
-                      htmlFor="rank"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Popularity
-                    </label>
-                    <select
-                      id="rank"
-                      value={query.rank}
-                      onChange={handleChange}
-                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="any">Any</option>
-                      <option value="high">High</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                  <div className="mb-2">
-                    <label
-                      htmlFor="year"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Year
-                    </label>
-                    <DropdownList
-                      data={yearsList}
-                      dataKey="year"
-                      textField="display"
-                      defaultValue={0}
-                      onChange={handleYearChange}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      containerClassName="dark:bg-gray-700 dark:text-white"
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label
-                      htmlFor="fstartswith"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Starts With:
-                    </label>
-                    <input
-                      type="search"
-                      id="fstartswith"
-                      value={query.fstartswith}
-                      onChange={handleChange}
-                      placeholder="Jo..."
-                      autoComplete="off"
-                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </fieldset>
-
-                <fieldset>
-                  <legend className="font-medium dark:text-white">
-                    Last Name:
-                  </legend>
-                  <div className="mb-2">
-                    <label
-                      htmlFor="race"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Race
-                    </label>
-                    <div className="space-y-2">
-                      <select
-                        id="race"
-                        value={query.race}
-                        onChange={handleChange}
-                        className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="any">Any</option>
-                        <option value="pctwhite">White</option>
-                        <option value="pcthispanic">Hispanic</option>
-                        <option value="pctasian">Asian</option>
-                        <option value="pctblack">Black</option>
-                        <option value="pctnative">Native</option>
-                      </select>
-
-                      {query.race !== "any" && (
-                        <div>
-                          <label
-                            htmlFor="racePercent"
-                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                          >
-                            Race Percentile
-                          </label>
-                          <input
-                            type="number"
-                            id="racePercent"
-                            value={query.racePercent}
-                            onChange={handleRacePercentChange}
-                            min="0"
-                            max="99"
-                            className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mb-2">
-                    <label
-                      htmlFor="frequency"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Popularity
-                    </label>
-                    <select
-                      id="frequency"
-                      value={query.frequency}
-                      onChange={handleChange}
-                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="any">Any</option>
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                  <div className="mb-2">
-                    <label
-                      htmlFor="sstartswith"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Starts With:
-                    </label>
-                    <input
-                      type="search"
-                      id="sstartswith"
-                      value={query.sstartswith}
-                      onChange={handleChange}
-                      placeholder="Smi..."
-                      autoComplete="off"
-                      className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </fieldset>
-              </form>
-            </div>
+            {showFilters && (
+              <Filters
+                query={query}
+                onQueryChange={(newQueryValues) => {
+                  setQuery((prev) => ({
+                    ...prev,
+                    ...newQueryValues,
+                  }));
+                }}
+                onClose={() => setShowFilters(false)}
+              />
+            )}
 
             <div
               className={`
