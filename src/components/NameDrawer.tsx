@@ -1,6 +1,6 @@
 // src/components/NameDrawer.tsx
 import React, { useRef } from "react";
-import { Heart, Lock, Search, X } from "lucide-react";
+import { Heart, Lock, X } from "lucide-react";
 import { DrawerProps } from "../types";
 import { useClickOutside } from "../hooks/useClickOutside";
 
