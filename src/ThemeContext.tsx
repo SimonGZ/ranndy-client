@@ -13,7 +13,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // First check if there's a saved preference
     const saved = localStorage.getItem("darkMode");
     if (saved !== null) {
-      console.log("found local storage!");
       return JSON.parse(saved);
     }
     // Only use system preference if no saved preference exists
@@ -22,7 +21,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Update document class and save user preference
-    console.log("Dark mode changed to:", isDarkMode);
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
@@ -46,7 +44,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleDarkMode = () => {
-    console.log("toggling dark mode");
     setIsDarkMode((prev: boolean) => !prev);
   };
 

@@ -55,7 +55,6 @@ function App() {
   };
 
   const handleFavorite = (name: Name) => {
-    console.log(`handleFavorite called with ${name}`);
     const isFavorite = favorites.some(
       (f) => f.first === name.first && f.last === name.last,
     );
