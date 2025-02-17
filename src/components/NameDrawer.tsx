@@ -1,8 +1,11 @@
-// src/components/NameDrawer.tsx
 import React, { useRef } from "react";
-import { Heart, Lock, X } from "lucide-react";
+import { Heart, Lock, X, Search } from "lucide-react";
 import { DrawerProps } from "../types";
 import { useClickOutside } from "../hooks/useClickOutside";
+
+const createGoogleSearchUrl = (name: string) => {
+  return `http://google.com/search?q=name+meaning+${encodeURIComponent(name)}`;
+};
 
 const NameDrawer: React.FC<DrawerProps> = ({
   name,
@@ -90,6 +93,28 @@ const NameDrawer: React.FC<DrawerProps> = ({
               <Lock className={isLastNameLocked ? "fill-current" : ""} />
               {isLastNameLocked ? "Unlock Last Name" : "Lock Last Name"}
             </button>
+          </div>
+
+          <div className="space-y-2">
+            <a
+              href={createGoogleSearchUrl(name.first)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-center"
+            >
+              <Search size={20} />
+              Search First Name Meaning
+            </a>
+
+            <a
+              href={createGoogleSearchUrl(name.last)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-center"
+            >
+              <Search size={20} />
+              Search Last Name Meaning
+            </a>
           </div>
         </div>
       </div>
