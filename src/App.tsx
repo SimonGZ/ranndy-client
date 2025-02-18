@@ -271,8 +271,8 @@ function App() {
                 mt-4
                 border-t dark:border-gray-700
                 py-4
-                sm:overflow-auto
-                ${showFilters ? "sm:max-h-[30vh]" : "sm:max-h-[calc(100vh-3rem)]"}
+                ${showFilters ? "sm:h-[30vh]" : "sm:h-[calc(100vh-3rem)]"}
+                sm:flex sm:flex-col
                 `}
             >
               <div className="flex justify-between items-center mb-4">
@@ -293,7 +293,7 @@ function App() {
                   No favorites yet
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 overflow-y-auto flex-1">
                   {favorites.map((name, index) => (
                     <div
                       key={index}
