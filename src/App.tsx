@@ -237,13 +237,22 @@ function App() {
           <div
             className={`
               ${showFilters || showFavorites ? "block" : "hidden"}
+              sm:sticky sm:top-2
               bg-white dark:bg-gray-800
               p-4 rounded-lg shadow
               transition-all duration-300
-            `}
+              sm:flex sm:flex-col
+              sm:max-h-[calc(100vh-2rem)] // Account for some margin
+              `}
           >
             {/* Filters Content */}
-            {showFilters && (
+            <div
+              className={`
+                ${showFilters ? "block" : "hidden"}
+                sm:overflow-auto
+                ${showFavorites ? "sm:max-h-[60vh]" : "sm:max-h-[calc(100vh-3rem)]"}
+                `}
+            >
               <Filters
                 query={query}
                 onQueryChange={(newQueryValues) => {
@@ -254,15 +263,16 @@ function App() {
                 }}
                 onClose={() => setShowFilters(false)}
               />
-            )}
+            </div>
 
             <div
               className={`
                 ${showFavorites ? "block" : "hidden"}
-                sm:sticky ${showFilters ? "sm:top-148" : "sm-top-4"}
                 mt-4
                 border-t dark:border-gray-700
                 py-4
+                sm:overflow-auto
+                ${showFilters ? "sm:max-h-[30vh]" : "sm:max-h-[calc(100vh-3rem)]"}
                 `}
             >
               <div className="flex justify-between items-center mb-4">
