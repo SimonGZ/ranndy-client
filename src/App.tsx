@@ -267,7 +267,7 @@ function App() {
 
             <div
               className={`
-                ${showFavorites ? "block" : "hidden"}
+                ${showFavorites ? "block" : "invisible"}
                 mt-4
                 border-t dark:border-gray-700
                 pt-4 px-4
