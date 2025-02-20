@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "beta-build": "npx vite build --base=https://ranndy.com/beta/"
+    "beta-build": "npx vite build --base=https://ranndy.com/beta/ && fish deploy.fish"
   },
   "dependencies": {
     "lucide-react": "^0.475.0",
