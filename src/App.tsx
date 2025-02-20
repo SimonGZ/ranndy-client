@@ -242,7 +242,7 @@ function App() {
               p-4 rounded-lg shadow
               transition-all duration-300
               sm:flex sm:flex-col
-              sm:max-h-[calc(100vh-2rem)] // Account for some margin
+              sm:max-h-[calc(100vh-2rem)]
               `}
           >
             {/* Filters Content */}
@@ -250,7 +250,7 @@ function App() {
               className={`
                 ${showFilters ? "block" : "hidden"}
                 sm:overflow-auto
-                ${showFavorites ? "sm:max-h-[60vh]" : "sm:max-h-[calc(100vh-3rem)]"}
+                ${showFavorites ? "sm:max-h-[60vh]" : "sm:max-h-[calc(100vh-2rem)]"}
                 `}
             >
               <Filters
@@ -270,13 +270,13 @@ function App() {
                 ${showFavorites ? "block" : "hidden"}
                 mt-4
                 border-t dark:border-gray-700
-                py-4
-                ${showFilters ? "sm:h-[30vh]" : "sm:h-[calc(100vh-3rem)]"}
+                pt-4 px-4
+                ${showFilters ? "sm:h-[30vh]" : "sm:h-[calc(100vh-2rem)]"}
                 sm:flex sm:flex-col
                 `}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold dark:text-white">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold dark:text-white mb-4">
                   Favorites ({favorites.length})
                 </h2>
                 <button
