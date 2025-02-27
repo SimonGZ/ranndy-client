@@ -171,6 +171,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
               ) : (
                 <NameChart
                   nameHistory={nameHistory}
+                  firstName={name.first}
                   isLoading={isLoadingHistory}
                 />
               )}

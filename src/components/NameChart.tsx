@@ -27,6 +27,7 @@ ChartJS.register(
 
 interface NameChartProps {
   nameHistory: NameHistory[] | null;
+  firstName: string;
   isLoading: boolean;
 }
 
@@ -56,7 +57,11 @@ const getOptimalDisplayMode = (dataLength: number): "all" | "sampled" => {
   return dataLength > 40 ? "sampled" : "all";
 };
 
-const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
+const NameChart: React.FC<NameChartProps> = ({
+  nameHistory,
+  firstName,
+  isLoading,
+}) => {
   const { isDarkMode } = useTheme();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -211,7 +216,7 @@ const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
       },
       title: {
         display: true,
-        text: `Name Popularity Over Time`,
+        text: `${firstName} Popularity Over Time`,
         color: textColor,
       },
       tooltip: {
