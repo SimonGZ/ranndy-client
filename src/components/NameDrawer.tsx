@@ -1,7 +1,10 @@
-import React, { useRef } from "react";
-import { Heart, Lock, X, Search } from "lucide-react";
-import { DrawerProps } from "../types";
+import React, { useRef, useState, useEffect } from "react";
+import { Heart, Lock, X, Search, TrendingUp } from "lucide-react";
+import { DrawerProps, NameHistory } from "../types";
 import { useClickOutside } from "../hooks/useClickOutside";
+import NameChart from "./NameChart";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const createGoogleSearchUrl = (name: string) => {
   return `http://google.com/search?q=name+meaning+${encodeURIComponent(name)}`;
@@ -19,7 +22,54 @@ const NameDrawer: React.FC<DrawerProps> = ({
   isLastNameLocked,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
+  const [nameHistory, setNameHistory] = useState<NameHistory[] | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [showChart, setShowChart] = useState(false);
+
   useClickOutside(drawerRef, onClose);
+
+  // Fetch name history when a name is selected
+  useEffect(() => {
+    if (isOpen && name && showChart) {
+      fetchNameHistory(name.first, name.gender === "M" ? "male" : "female");
+    }
+  }, [isOpen, name, showChart]);
+
+  // Reset state when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowChart(false);
+      setNameHistory(null);
+      setHistoryError(null);
+    }
+  }, [isOpen]);
+
+  const fetchNameHistory = async (firstName: string, gender: string) => {
+    setIsLoadingHistory(true);
+    setHistoryError(null);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/firstnames/history?name=${encodeURIComponent(firstName)}&gender=${gender}`,
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.errors?.[0]?.message || "Failed to fetch name history",
+        );
+      }
+
+      const data = await response.json();
+      setNameHistory(data.history);
+    } catch (error: any) {
+      console.error("Error fetching name history:", error);
+      setHistoryError(error.message);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   if (!isOpen || !name) return null;
 
@@ -43,10 +93,14 @@ const NameDrawer: React.FC<DrawerProps> = ({
     onClose();
   };
 
+  const toggleChart = () => {
+    setShowChart(!showChart);
+  };
+
   return (
     <div
       ref={drawerRef}
-      className="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-800 shadow-lg"
+      className="fixed inset-y-0 right-0 w-96 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto"
       role="dialog"
       aria-modal="true"
       onClick={(e) => e.stopPropagation()}
@@ -66,6 +120,9 @@ const NameDrawer: React.FC<DrawerProps> = ({
           <h3 className="text-lg font-bold text-sky-800 dark:text-sky-300">
             {name.first} {name.last}
           </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Gender: {name.gender === "M" ? "Male" : "Female"}
+          </p>
         </div>
 
         <div className="mt-4 space-y-4 dark:text-white">
@@ -94,6 +151,31 @@ const NameDrawer: React.FC<DrawerProps> = ({
               {isLastNameLocked ? "Unlock Last Name" : "Lock Last Name"}
             </button>
           </div>
+
+          {/* Name Popularity Chart Toggle */}
+          <button
+            onClick={toggleChart}
+            className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800"
+          >
+            <TrendingUp />
+            {showChart ? "Hide Popularity Chart" : "Show Popularity Chart"}
+          </button>
+
+          {/* Chart Section */}
+          {showChart && (
+            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              {historyError ? (
+                <div className="text-red-500 p-4 text-center">
+                  {historyError}
+                </div>
+              ) : (
+                <NameChart
+                  nameHistory={nameHistory}
+                  isLoading={isLoadingHistory}
+                />
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <a

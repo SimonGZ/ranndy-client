@@ -18,3 +18,11 @@ export interface DrawerProps {
   isFirstNameLocked: boolean;
   isLastNameLocked: boolean;
 }
+
+export interface NameHistory {
+  name: string;
+  gender: string;
+  year: number;
+  rank: number;
+  count: number;
+}
