@@ -3,6 +3,7 @@ import { Name } from "./types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import NameDrawer from "./components/NameDrawer";
 import Filters from "./components/Filters";
+import NameSkeleton from "./components/NameSkeleton";
 import { useTheme } from "./ThemeContext";
 import { Moon, Sun, Filter, X, Heart } from "lucide-react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -44,6 +45,7 @@ function App() {
   const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
   const [showFilters, setShowFilters] = useState(true);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Handler functions
   const handleNameClick = (name: Name) => {
@@ -121,6 +123,10 @@ function App() {
   };
 
   const getNames = async (isInitial: boolean = false) => {
+    if (isInitial) {
+      setLoading(true);
+    }
+
     setError(null);
     try {
       let url = `${API_URL}/api/names?`;
@@ -158,11 +164,13 @@ function App() {
       // If this is an initial load (from filter change), replace the names
       // Otherwise, append the new names to the existing list
       setNames(isInitial ? newNames : [...names, ...newNames]);
+      setLoading(false);
 
       // Set hasMore based on whether we got a full page of results
       setHasMore(newNames.length === 50);
     } catch (err: any) {
       setError(err.message);
+      setLoading(false);
       console.error("Error fetching names:", err);
     }
   };
@@ -345,21 +353,25 @@ function App() {
                 </div>
               }
             >
-              <div className="text-center font-semibold text-2xl">
-                {names.map((name, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleNameClick(name)}
-                    className={
-                      index % 2 === 0
-                        ? "cursor-pointer p-3 bg-gray-50 hover:bg-blue-500 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none dark:text-white"
-                        : "cursor-pointer p-3 border-b border-gray-200 hover:bg-blue-500 dark:border-gray-600 last:border-none dark:text-white"
-                    }
-                  >
-                    {name.first} {name.last}
-                  </div>
-                ))}
-              </div>
+              {loading ? (
+                <NameSkeleton count={50} />
+              ) : (
+                <div className="text-center font-semibold text-2xl">
+                  {names.map((name, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleNameClick(name)}
+                      className={
+                        index % 2 === 0
+                          ? "cursor-pointer p-3 bg-gray-50 hover:bg-blue-500 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none dark:text-white"
+                          : "cursor-pointer p-3 border-b border-gray-200 hover:bg-blue-500 dark:border-gray-600 last:border-none dark:text-white"
+                      }
+                    >
+                      {name.first} {name.last}
+                    </div>
+                  ))}
+                </div>
+              )}
             </InfiniteScroll>
           </div>
         </div>
