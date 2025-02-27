@@ -37,7 +37,7 @@ const sampleData = (data: NameHistory[], sampleRate: number): NameHistory[] => {
   return data.filter((_, index) => index % sampleRate === 0);
 };
 
-// Alternative: Reduce data by decades
+// Reduce data by decades
 const reduceByDecades = (data: NameHistory[]): NameHistory[] => {
   const decadeMap = new Map<number, NameHistory>();
 
@@ -51,12 +51,26 @@ const reduceByDecades = (data: NameHistory[]): NameHistory[] => {
   return Array.from(decadeMap.values()).sort((a, b) => a.year - b.year);
 };
 
+// Determine optimal display mode based on data size - only choose between sampled and all
+const getOptimalDisplayMode = (dataLength: number): "all" | "sampled" => {
+  return dataLength > 40 ? "sampled" : "all";
+};
+
 const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
   const { isDarkMode } = useTheme();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Initialize display mode, but allow for 'decades' as a user selection
   const [dataDisplayMode, setDataDisplayMode] = useState<
     "all" | "decades" | "sampled"
-  >("all");
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  >("sampled");
+
+  // Set optimal display mode when data is loaded (only choose between 'all' and 'sampled')
+  useEffect(() => {
+    if (nameHistory && nameHistory.length > 0) {
+      setDataDisplayMode(getOptimalDisplayMode(nameHistory.length));
+    }
+  }, [nameHistory]);
 
   // Update window width on resize
   useEffect(() => {
@@ -95,8 +109,7 @@ const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
     displayData = reduceByDecades(sortedData);
   } else if (dataDisplayMode === "sampled") {
     // Dynamically adjust sample rate based on data size
-    const sampleRate =
-      sortedData.length > 100 ? 5 : sortedData.length > 50 ? 3 : 2;
+    const sampleRate = sortedData.length > 100 ? 5 : 3;
     displayData = sampleData(sortedData, sampleRate);
   }
 
@@ -216,17 +229,17 @@ const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
 
   return (
     <div className="mt-4">
-      {/* Chart display mode selector */}
+      {/* Chart display mode selector - keeping all three options */}
       <div className="flex justify-end mb-2 space-x-2 text-sm">
         <button
-          onClick={() => setDataDisplayMode("all")}
+          onClick={() => setDataDisplayMode("sampled")}
           className={`px-2 py-1 rounded ${
-            dataDisplayMode === "all"
+            dataDisplayMode === "sampled"
               ? "bg-blue-500 text-white"
               : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           }`}
         >
-          All Years
+          Sampled
         </button>
         <button
           onClick={() => setDataDisplayMode("decades")}
@@ -239,14 +252,14 @@ const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
           By Decade
         </button>
         <button
-          onClick={() => setDataDisplayMode("sampled")}
+          onClick={() => setDataDisplayMode("all")}
           className={`px-2 py-1 rounded ${
-            dataDisplayMode === "sampled"
+            dataDisplayMode === "all"
               ? "bg-blue-500 text-white"
               : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           }`}
         >
-          Sampled
+          All Years
         </button>
       </div>
 
@@ -259,11 +272,6 @@ const NameChart: React.FC<NameChartProps> = ({ nameHistory, isLoading }) => {
       <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
         <p>* Lower rank is more popular (1 = most popular)</p>
         <p>* Data sourced from US Census and Social Security records</p>
-        {dataDisplayMode !== "all" && (
-          <p className="italic">
-            * Showing reduced dataset for better visibility
-          </p>
-        )}
       </div>
     </div>
   );
