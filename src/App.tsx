@@ -236,12 +236,11 @@ function App() {
           {/* Sidebar Container */}
           <div
             className={`
-              ${showFilters || showFavorites ? "block" : "hidden"}
+              ${showFilters || showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
               sm:sticky sm:top-2
               bg-white dark:bg-gray-800
               p-4 rounded-lg shadow
               transition-all duration-300
-              sm:flex sm:flex-col
               sm:max-h-[calc(100vh-2rem)]
               `}
           >
@@ -267,12 +266,11 @@ function App() {
 
             <div
               className={`
-                ${showFavorites ? "block" : "invisible"}
+                ${showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
                 mt-4
                 border-t dark:border-gray-700
                 pt-4 px-4
                 ${showFilters ? "sm:h-[30vh]" : "sm:h-[calc(100vh-2rem)]"}
-                sm:flex sm:flex-col
                 `}
             >
               <div className="flex justify-between items-center">
