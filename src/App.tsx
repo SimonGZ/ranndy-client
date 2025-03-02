@@ -304,7 +304,7 @@ function App() {
                   className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                   aria-label="Close favorites"
                 >
-                  <X size={24} />
+                  <X size={24} className="text-gray-700 dark:text-white" />
                 </button>
               </div>
 

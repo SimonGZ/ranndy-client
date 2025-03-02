@@ -60,7 +60,7 @@ const Filters: React.FC<FiltersProps> = ({ query, onQueryChange, onClose }) => {
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 sm:hidden"
           aria-label="Close filters"
         >
-          <X size={24} />
+          <X size={24} className="text-gray-700 dark:text-white" />
         </button>
       </div>
 
