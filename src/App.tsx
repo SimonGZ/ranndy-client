@@ -275,10 +275,9 @@ function App() {
             <div
               className={`
                 ${showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
-                mt-4
-                border-t dark:border-gray-700
-                pt-4 px-4
-                ${showFilters ? "sm:h-[30vh]" : "sm:h-[calc(100vh-2rem)]"}
+                dark:border-gray-700
+                px-4
+                ${showFilters ? "sm:h-[30vh] border-t mt-4 pt-4" : "sm:h-[calc(100vh-2rem)]"}
                 `}
             >
               <div className="flex justify-between items-center">
