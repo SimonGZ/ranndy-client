@@ -43,9 +43,12 @@ function App() {
   const [favorites, setFavorites] = useLocalStorage<Name[]>("favorites", []);
   const [lockedFirstName, setLockedFirstName] = useState<Name | null>(null);
   const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
-  const [showFilters, setShowFilters] = useState(true);
   const [showFavorites, setShowFavorites] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(() => {
+    // Check if we're on mobile or desktop at initial load
+    return window.matchMedia("(min-width: 640px)").matches;
+  });
 
   // Handler functions
   const handleNameClick = (name: Name) => {
