@@ -73,6 +73,18 @@ function App() {
     }
   };
 
+  const handleClearFavorites = () => {
+    if (favorites.length === 0) return; // No need to confirm if there's nothing to clear
+
+    if (
+      window.confirm(
+        "Are you sure you want to clear all favorites? This cannot be undone.",
+      )
+    ) {
+      setFavorites([]);
+    }
+  };
+
   const handleLockFirst = (name: Name) => {
     if (lockedFirstName?.first === name.first) {
       setLockedFirstName(null);
@@ -277,11 +289,11 @@ function App() {
 
             <div
               className={`
-                ${showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
-                dark:border-gray-700
-                px-4
-                ${showFilters ? "sm:h-[30vh] border-t mt-4 pt-4" : "sm:h-[calc(100vh-2rem)]"}
-                `}
+    ${showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
+    dark:border-gray-700
+    px-4
+    ${showFilters ? "sm:h-[30vh] border-t mt-4 pt-4" : "sm:h-[calc(100vh-2rem)]"}
+    `}
             >
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold dark:text-white mb-4">
@@ -301,26 +313,38 @@ function App() {
                   No favorites yet
                 </p>
               ) : (
-                <div className="space-y-2 overflow-y-auto flex-1">
-                  {favorites.map((name, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleNameClick(name)}
-                      className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                    >
-                      <span className="dark:text-white">
-                        {name.first} {name.last}
-                      </span>
-                      <button
-                        onClick={(e) => handleFavoriteClick(name, e)}
-                        className="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
-                        aria-label={`Remove ${name.first} ${name.last} from favorites`}
+                <>
+                  <div className="space-y-2 overflow-y-auto flex-1">
+                    {favorites.map((name, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleNameClick(name)}
+                        className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                       >
-                        <Heart size={20} className="fill-current" />
+                        <span className="dark:text-white">
+                          {name.first} {name.last}
+                        </span>
+                        <button
+                          onClick={(e) => handleFavoriteClick(name, e)}
+                          className="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
+                          aria-label={`Remove ${name.first} ${name.last} from favorites`}
+                        >
+                          <Heart size={20} className="fill-current" />
+                        </button>
+                      </div>
+                    ))}
+                    {/* Clear Favorites Button */}
+                    <div className="mt-2 pt-2">
+                      <button
+                        onClick={handleClearFavorites}
+                        className="cursor-pointer w-full py-2 px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 text-sm font-medium rounded-md transition-colors"
+                        aria-label="Clear favorites"
+                      >
+                        Clear Favorites
                       </button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
