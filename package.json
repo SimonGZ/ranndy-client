@@ -1,14 +1,14 @@
 {
   "name": "ranndy-react-client",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "beta-build": "npx vite build --base=https://ranndy.com/beta/ && fish deploy.fish"
+    "beta-build": "npx vite build --base=https://ranndy.com/beta/ && fish deploy-beta.fish"
   },
   "dependencies": {
     "chart.js": "^4.4.8",
