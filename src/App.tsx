@@ -218,7 +218,7 @@ function App() {
   const { isDarkMode, toggleDarkMode } = useTheme();
 
   return (
-    <div className="min-h-screen font-sans dark:bg-gray-900">
+    <div className="min-h-screen font-sans bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto p-4 max-w-5xl">
         <header className="bg-sky-700 dark:bg-sky-900 text-white p-4 rounded-t-lg flex justify-between items-center">
           <h1 className="text-2xl font-bold">Name Generator</h1>
