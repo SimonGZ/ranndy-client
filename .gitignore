@@ -25,4 +25,5 @@ dist-ssr
 
 # Local scripts
 /deploy.fish
+/deploy-beta.fish
 .aider*
