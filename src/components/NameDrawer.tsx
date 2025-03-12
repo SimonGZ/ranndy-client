@@ -6,8 +6,12 @@ import NameChart from "./NameChart";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-const createGoogleSearchUrl = (name: string) => {
-  return `http://google.com/search?q=name+meaning+${encodeURIComponent(name)}`;
+const createGoogleSearchUrl = (name: string, last: boolean) => {
+  if (last) {
+    return `http://google.com/search?q=surname+meaning+${encodeURIComponent(name)}`;
+  } else {
+    return `http://google.com/search?q=first+name+meaning+${encodeURIComponent(name)}`;
+  }
 };
 
 const NameDrawer: React.FC<DrawerProps> = ({
@@ -180,7 +184,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
 
           <div className="space-y-2">
             <a
-              href={createGoogleSearchUrl(name.first)}
+              href={createGoogleSearchUrl(name.first, false)}
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-center"
@@ -190,7 +194,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
             </a>
 
             <a
-              href={createGoogleSearchUrl(name.last)}
+              href={createGoogleSearchUrl(name.last, true)}
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-center"
