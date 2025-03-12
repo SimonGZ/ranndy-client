@@ -356,7 +356,7 @@ function App() {
             className={`
             bg-white dark:bg-gray-800
             p-4 rounded-lg shadow
-            ${!showFilters && !showFavorites ? "col-span-full px-8" : "col-span-2"}
+            ${!showFilters && !showFavorites ? "col-span-full px-4" : "col-span-2"}
           `}
           >
             <h2 className="text-lg font-semibold mb-4 dark:text-white">
