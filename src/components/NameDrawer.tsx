@@ -49,6 +49,25 @@ const NameDrawer: React.FC<DrawerProps> = ({
     }
   }, [isOpen]);
 
+  // Add keyboard event listener for Escape key
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (isOpen && event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    // Add event listener when drawer is open
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscapeKey);
+    }
+
+    // Clean up event listener when component unmounts or drawer closes
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isOpen, onClose]);
+
   const fetchNameHistory = async (firstName: string, gender: string) => {
     setIsLoadingHistory(true);
     setHistoryError(null);
