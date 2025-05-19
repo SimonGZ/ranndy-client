@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "tsc -b && vite build && ./deploy.fish",
     "lint": "eslint .",
     "preview": "vite preview",
-    "beta-build": "npx vite build --base=https://ranndy.com/beta/ && fish deploy-beta.fish"
+    "beta-deploy": "npx vite build --base=https://ranndy.com/beta/ && fish deploy-beta.fish"
   },
   "dependencies": {
     "chart.js": "^4.4.8",
