@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Name } from "./types";
+import { Name, NamePair } from "./types"; // Import new types
 import InfiniteScroll from "react-infinite-scroll-component";
 import NameDrawer from "./components/NameDrawer";
 import Filters from "./components/Filters";
@@ -26,6 +26,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 function App() {
   const [names, setNames] = useState<Name[]>([]);
+  const [rawData, setRawData] = useState<NamePair[]>([]); // State to store raw API data
   const [hasMore, setHasMore] = useState(true);
   const [query, setQuery] = useState<Query>({
     rank: "high",
@@ -39,7 +40,14 @@ function App() {
   });
   const scrollTimeoutRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedName, setSelectedName] = useState<Name | null>(null);
+  const [selectedNamePair, setSelectedNamePair] = useState<NamePair | null>(
+    null,
+  ); // State to store the selected full name pair
+  // State to track which chart is active in the drawer ('none', 'history', 'race')
+  const [activeChartType, setActiveChartType] = useState<
+    "none" | "history" | "race"
+  >("race"); // Default to race chart open
+
   const [favorites, setFavorites] = useLocalStorage<Name[]>("favorites", []);
   const [lockedFirstName, setLockedFirstName] = useState<Name | null>(null);
   const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
@@ -52,11 +60,17 @@ function App() {
 
   // Handler functions
   const handleNameClick = (name: Name) => {
-    setSelectedName(name);
+    // Find the corresponding raw data pair
+    const clickedPair = rawData.find(
+      (pair) => pair[0]?.name === name.first && pair[1]?.name === name.last,
+    );
+    setSelectedNamePair(clickedPair || null);
+    // When a new name is clicked, the drawer will open with the chart type
+    // currently stored in activeChartType (defaulting to 'race' or last chosen)
   };
 
   const handleDrawerClose = () => {
-    setSelectedName(null);
+    setSelectedNamePair(null);
   };
 
   const handleFavorite = (name: Name) => {
@@ -170,15 +184,18 @@ function App() {
       }
 
       const data = await response.json();
-      const newNames = data.names.map((item: any[]) => ({
+      const newRawData: NamePair[] = data.names; // Store the raw data
+
+      const newNames: Name[] = newRawData.map((item) => ({
         first: item[0] ? item[0].name : "NoneMatching",
         last: item[1] ? item[1].name : "NoneMatching",
-        gender: item[0] ? item[0].gender : "NoneMatching",
+        gender: item[0] ? item[0].gender : "NoneMatching", // Gender is on the first name object
       }));
 
-      // If this is an initial load (from filter change), replace the names
-      // Otherwise, append the new names to the existing list
+      // If this is an initial load (from filter change), replace the names and raw data
+      // Otherwise, append the new names and raw data to the existing lists
       setNames(isInitial ? newNames : [...names, ...newNames]);
+      setRawData(isInitial ? newRawData : [...rawData, ...newRawData]);
       setLoading(false);
 
       // Set hasMore based on whether we got a full page of results
@@ -403,19 +420,50 @@ function App() {
         </div>
         {/* Drawer component with all necessary props */}
         <NameDrawer
-          name={selectedName}
-          isOpen={!!selectedName}
+          namePair={selectedNamePair} // Pass the full name pair
+          isOpen={!!selectedNamePair}
           onClose={handleDrawerClose}
-          onFavorite={handleFavorite}
-          onLockFirst={handleLockFirst}
-          onLockLast={handleLockLast}
-          isFavorite={selectedName ? isNameFavorite(selectedName) : false}
+          // Pass the simplified Name object to handlers that only need it
+          onFavorite={
+            selectedNamePair ? (name) => handleFavorite(name) : () => {} // Provide a no-op function if no name is selected
+          }
+          onLockFirst={
+            selectedNamePair ? (name) => handleLockFirst(name) : () => {} // Provide a no-op function if no name is selected
+          }
+          onLockLast={
+            selectedNamePair ? (name) => handleLockLast(name) : () => {} // Provide a no-op function if no name is selected
+          }
+          // Check favorite/locked status using the simplified Name object derived from the pair
+          isFavorite={
+            selectedNamePair
+              ? isNameFavorite({
+                  first: selectedNamePair[0]?.name || "NoneMatching",
+                  last: selectedNamePair[1]?.name || "NoneMatching",
+                  gender: selectedNamePair[0]?.gender || "NoneMatching",
+                })
+              : false
+          }
           isFirstNameLocked={
-            selectedName ? isFirstNameLocked(selectedName) : false
+            selectedNamePair
+              ? isFirstNameLocked({
+                  first: selectedNamePair[0]?.name || "NoneMatching",
+                  last: selectedNamePair[1]?.name || "NoneMatching",
+                  gender: selectedNamePair[0]?.gender || "NoneMatching",
+                })
+              : false
           }
           isLastNameLocked={
-            selectedName ? isLastNameLocked(selectedName) : false
+            selectedNamePair
+              ? isLastNameLocked({
+                  first: selectedNamePair[0]?.name || "NoneMatching",
+                  last: selectedNamePair[1]?.name || "NoneMatching",
+                  gender: selectedNamePair[0]?.gender || "NoneMatching",
+                })
+              : false
           }
+          // Pass chart visibility state and setter
+          activeChartType={activeChartType}
+          setActiveChartType={setActiveChartType}
         />
       </div>
     </div>

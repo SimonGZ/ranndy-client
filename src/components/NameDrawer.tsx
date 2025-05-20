@@ -1,8 +1,16 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Heart, Lock, X, Search, TrendingUp } from "lucide-react";
-import { DrawerProps, NameHistory } from "../types";
+import React, { useRef, useEffect } from "react"; // Removed useState
+import { Heart, Lock, X, Search, TrendingUp, PieChart } from "lucide-react"; // Added PieChart icon
+import {
+  DrawerProps, // Now includes namePair, activeChartType, setActiveChartType
+  LastNameDetails,
+  NameHistory,
+  NamePair,
+  SurnameRaceData,
+  Name,
+} from "../types"; // Import new types
 import { useClickOutside } from "../hooks/useClickOutside";
 import NameChart from "./NameChart";
+import SurnameRaceChart from "./SurnameRaceChart"; // Import the new component
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -14,8 +22,61 @@ const createGoogleSearchUrl = (name: string, last: boolean) => {
   }
 };
 
-const NameDrawer: React.FC<DrawerProps> = ({
-  name,
+// Helper to convert string percentages to numbers
+const parseRaceData = (
+  lastNameDetails: NamePair[1],
+): SurnameRaceData | null => {
+  if (!lastNameDetails) return null;
+
+  // Check if all required race percentage properties exist and are strings
+  const requiredKeys: (keyof LastNameDetails)[] = [
+    "pctwhite",
+    "pctblack",
+    "pctasian",
+    "pctnative",
+    "pct2prace",
+    "pcthispanic",
+  ];
+
+  const allKeysExist = requiredKeys.every(
+    (key) =>
+      Object.prototype.hasOwnProperty.call(lastNameDetails, key) &&
+      typeof lastNameDetails[key] === "string",
+  );
+
+  if (!allKeysExist) {
+    console.warn(
+      "Missing or incorrect type for race data in lastNameDetails:",
+      lastNameDetails,
+    );
+    return null;
+  }
+
+  // Attempt to parse strings to numbers
+  const parsedData = {
+    pctWhite: parseFloat(lastNameDetails.pctwhite),
+    pctBlack: parseFloat(lastNameDetails.pctblack),
+    pctAsian: parseFloat(lastNameDetails.pctasian),
+    pctNative: parseFloat(lastNameDetails.pctnative),
+    pctTwoOrMoreRaces: parseFloat(lastNameDetails.pct2prace),
+    pctHispanic: parseFloat(lastNameDetails.pcthispanic),
+  };
+
+  // Check if parsing resulted in valid numbers
+  const allParsedAreNumbers = Object.values(parsedData).every(
+    (val) => !isNaN(val),
+  );
+
+  if (!allParsedAreNumbers) {
+    console.warn("Failed to parse race data percentages:", lastNameDetails);
+    return null;
+  }
+
+  return parsedData;
+};
+
+const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
+  namePair, // Use namePair instead of name
   isOpen,
   onClose,
   onFavorite,
@@ -24,30 +85,60 @@ const NameDrawer: React.FC<DrawerProps> = ({
   isFavorite,
   isFirstNameLocked,
   isLastNameLocked,
+  activeChartType, // Use prop instead of local state
+  setActiveChartType, // Use prop instead of local state setter
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
-  const [nameHistory, setNameHistory] = useState<NameHistory[] | null>(null);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
-  const [showChart, setShowChart] = useState(false);
+  // Keep local state for fetched data and loading/error status
+  const [nameHistory, setNameHistory] = React.useState<NameHistory[] | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = React.useState(false);
+  const [historyError, setHistoryError] = React.useState<string | null>(null);
+
+  const [surnameRaceData, setSurnameRaceData] =
+    React.useState<SurnameRaceData | null>(null);
+  // No local state for showRaceChart or showHistoryChart
 
   useClickOutside(drawerRef, onClose);
 
-  // Fetch name history when a name is selected
-  useEffect(() => {
-    if (isOpen && name && showChart) {
-      fetchNameHistory(name.first, name.gender === "M" ? "male" : "female");
-    }
-  }, [isOpen, name, showChart]);
+  // Extract first and last name details from the pair
+  const firstNameDetails = namePair ? namePair[0] : null;
+  const lastNameDetails = namePair ? namePair[1] : null;
 
-  // Reset state when drawer closes
+  // Create a simplified Name object for handlers that expect it
+  const simpleName: Name | null = namePair
+    ? {
+        first: firstNameDetails?.name || "NoneMatching",
+        last: lastNameDetails?.name || "NoneMatching",
+        gender: firstNameDetails?.gender || "NoneMatching",
+      }
+    : null;
+
+  // Fetch name history when a name is selected and history chart is active
   useEffect(() => {
-    if (!isOpen) {
-      setShowChart(false);
-      setNameHistory(null);
-      setHistoryError(null);
+    if (isOpen && firstNameDetails && activeChartType === "history") {
+      fetchNameHistory(
+        firstNameDetails.name,
+        firstNameDetails.gender === "M" ? "male" : "female",
+      );
+    } else if (!isOpen || activeChartType !== "history") {
+       // Clear history data if drawer closes or history chart is not active
+       setNameHistory(null);
+       setHistoryError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, firstNameDetails, activeChartType]); // Depend on activeChartType
+
+  // Parse surname race data when a name is selected and race chart is active
+  useEffect(() => {
+    if (isOpen && lastNameDetails && activeChartType === "race") {
+      setSurnameRaceData(parseRaceData(lastNameDetails));
+    } else if (!isOpen || activeChartType !== "race") {
+      // Clear race data if drawer closes or race chart is not active
+      setSurnameRaceData(null);
+    }
+  }, [isOpen, lastNameDetails, activeChartType]); // Depend on activeChartType
+
+  // No need to reset state on close here, useEffects above handle clearing data
+  // when isOpen becomes false or activeChartType changes away from the chart type.
 
   // Add keyboard event listener for Escape key
   useEffect(() => {
@@ -94,21 +185,20 @@ const NameDrawer: React.FC<DrawerProps> = ({
     }
   };
 
-  if (!isOpen || !name) return null;
-
+  // Use simpleName for handlers that need the Name interface
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onFavorite(name);
+    if (simpleName) onFavorite(simpleName);
   };
 
   const handleLockFirstClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onLockFirst(name);
+    if (simpleName) onLockFirst(simpleName);
   };
 
   const handleLockLastClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onLockLast(name);
+    if (simpleName) onLockLast(simpleName);
   };
 
   const handleCloseClick = (e: React.MouseEvent) => {
@@ -116,9 +206,30 @@ const NameDrawer: React.FC<DrawerProps> = ({
     onClose();
   };
 
-  const toggleChart = () => {
-    setShowChart(!showChart);
+  // Toggle handlers now update the activeChartType state via prop
+  const toggleHistoryChart = () => {
+    if (activeChartType === "history") {
+      setActiveChartType("none"); // Hide history chart
+    } else {
+      setActiveChartType("history"); // Show history chart
+    }
   };
+
+  const toggleRaceChart = () => {
+    if (activeChartType === "race") {
+      setActiveChartType("none"); // Hide race chart
+    } else {
+      setActiveChartType("race"); // Show race chart
+    }
+  };
+
+
+  if (!isOpen || !namePair) return null; // Check namePair instead of name
+
+  // Use simpleName for display purposes
+  const displayFirstName = simpleName?.first || "N/A";
+  const displayLastName = simpleName?.last || "N/A";
+  const displayGender = simpleName?.gender === "M" ? "Male" : "Female";
 
   return (
     <div
@@ -141,10 +252,10 @@ const NameDrawer: React.FC<DrawerProps> = ({
 
         <div>
           <h3 className="text-lg font-bold text-sky-800 dark:text-sky-300">
-            {name.first} {name.last}
+            {displayFirstName} {displayLastName}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Gender: {name.gender === "M" ? "Male" : "Female"}
+            Gender: {displayGender}
           </p>
         </div>
 
@@ -175,35 +286,69 @@ const NameDrawer: React.FC<DrawerProps> = ({
             </button>
           </div>
 
-          {/* Name Popularity Chart Toggle */}
-          <button
-            onClick={toggleChart}
-            className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800"
-          >
-            <TrendingUp />
-            {showChart ? "Hide Popularity Chart" : "Show Popularity Chart"}
-          </button>
+          {/* Chart Toggle Buttons */}
+          <div className="space-y-2">
+            {/* Name Popularity Chart Toggle */}
+            <button
+              onClick={toggleHistoryChart}
+              className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800"
+            >
+              <TrendingUp />
+              {activeChartType === "history" // Check activeChartType prop
+                ? "Hide Popularity Chart"
+                : "Show Popularity Chart"}
+            </button>
 
-          {/* Chart Section */}
-          {showChart && (
+            {/* Surname Race Chart Toggle */}
+            {lastNameDetails && ( // Only show if last name data is available
+              <button
+                onClick={toggleRaceChart}
+                className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-teal-100 dark:bg-teal-900 hover:bg-teal-200 dark:hover:bg-teal-800"
+              >
+                <PieChart />
+                {activeChartType === "race" // Check activeChartType prop
+                  ? "Hide Race Breakdown"
+                  : "Show Race Breakdown"}
+              </button>
+            )}
+          </div>
+
+          {/* Chart Sections */}
+          {activeChartType === "history" && ( // Conditional rendering based on activeChartType
             <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              {historyError ? (
+              {isLoadingHistory ? ( // Show loading state for history chart
+                 <div className="h-64 flex items-center justify-center">
+                   Loading chart data...
+                 </div>
+              ) : historyError ? (
                 <div className="text-red-500 p-4 text-center">
                   {historyError}
                 </div>
               ) : (
                 <NameChart
                   nameHistory={nameHistory}
-                  firstName={name.first}
-                  isLoading={isLoadingHistory}
+                  firstName={displayFirstName}
+                  isLoading={isLoadingHistory} // Pass loading state
                 />
               )}
             </div>
           )}
 
+          {activeChartType === "race" &&
+            lastNameDetails && ( // Conditional rendering based on activeChartType and data existence
+              <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                 {/* SurnameRaceChart handles its own loading/no data states */}
+                <SurnameRaceChart
+                  data={surnameRaceData}
+                  surname={displayLastName}
+                  isLoading={false} // Race data is parsed locally, not fetched async here
+                />
+              </div>
+            )}
+
           <div className="space-y-2">
             <a
-              href={createGoogleSearchUrl(name.first, false)}
+              href={createGoogleSearchUrl(displayFirstName, false)}
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-center"
@@ -213,7 +358,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
             </a>
 
             <a
-              href={createGoogleSearchUrl(name.last, true)}
+              href={createGoogleSearchUrl(displayLastName, true)}
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-center"
