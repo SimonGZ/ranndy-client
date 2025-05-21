@@ -9,7 +9,7 @@ import {
   Name,
 } from "../types"; // Import new types
 import { useClickOutside } from "../hooks/useClickOutside";
-import NameChart from "./NameChart";
+import NamePopularityChart from "./NamePopularityChart";
 import SurnameRaceChart from "./SurnameRaceChart"; // Import the new component
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -75,7 +75,8 @@ const parseRaceData = (
   return parsedData;
 };
 
-const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
+const NameDrawer: React.FC<DrawerProps> = ({
+  // Use DrawerProps directly
   namePair, // Use namePair instead of name
   isOpen,
   onClose,
@@ -90,7 +91,9 @@ const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   // Keep local state for fetched data and loading/error status
-  const [nameHistory, setNameHistory] = React.useState<NameHistory[] | null>(null);
+  const [nameHistory, setNameHistory] = React.useState<NameHistory[] | null>(
+    null,
+  );
   const [isLoadingHistory, setIsLoadingHistory] = React.useState(false);
   const [historyError, setHistoryError] = React.useState<string | null>(null);
 
@@ -121,9 +124,9 @@ const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
         firstNameDetails.gender === "M" ? "male" : "female",
       );
     } else if (!isOpen || activeChartType !== "history") {
-       // Clear history data if drawer closes or history chart is not active
-       setNameHistory(null);
-       setHistoryError(null);
+      // Clear history data if drawer closes or history chart is not active
+      setNameHistory(null);
+      setHistoryError(null);
     }
   }, [isOpen, firstNameDetails, activeChartType]); // Depend on activeChartType
 
@@ -223,7 +226,6 @@ const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
     }
   };
 
-
   if (!isOpen || !namePair) return null; // Check namePair instead of name
 
   // Use simpleName for display purposes
@@ -317,15 +319,15 @@ const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
           {activeChartType === "history" && ( // Conditional rendering based on activeChartType
             <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
               {isLoadingHistory ? ( // Show loading state for history chart
-                 <div className="h-64 flex items-center justify-center">
-                   Loading chart data...
-                 </div>
+                <div className="h-64 flex items-center justify-center">
+                  Loading chart data...
+                </div>
               ) : historyError ? (
                 <div className="text-red-500 p-4 text-center">
                   {historyError}
                 </div>
               ) : (
-                <NameChart
+                <NamePopularityChart
                   nameHistory={nameHistory}
                   firstName={displayFirstName}
                   isLoading={isLoadingHistory} // Pass loading state
@@ -337,7 +339,7 @@ const NameDrawer: React.FC<DrawerProps> = ({ // Use DrawerProps directly
           {activeChartType === "race" &&
             lastNameDetails && ( // Conditional rendering based on activeChartType and data existence
               <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                 {/* SurnameRaceChart handles its own loading/no data states */}
+                {/* SurnameRaceChart handles its own loading/no data states */}
                 <SurnameRaceChart
                   data={surnameRaceData}
                   surname={displayLastName}

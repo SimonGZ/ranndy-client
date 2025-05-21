@@ -25,7 +25,7 @@ ChartJS.register(
   Legend,
 );
 
-interface NameChartProps {
+interface NamePopularityChartProps {
   nameHistory: NameHistory[] | null;
   firstName: string;
   isLoading: boolean;
@@ -57,7 +57,7 @@ const getOptimalDisplayMode = (dataLength: number): "all" | "sampled" => {
   return dataLength > 40 ? "sampled" : "all";
 };
 
-const NameChart: React.FC<NameChartProps> = ({
+const NamePopularityChart: React.FC<NamePopularityChartProps> = ({
   nameHistory,
   firstName,
   isLoading,
@@ -229,7 +229,6 @@ const NameChart: React.FC<NameChartProps> = ({
           },
         },
       },
-      // Add this to disable data labels on the points for this specific chart
       datalabels: {
         display: false,
       },
@@ -286,4 +285,4 @@ const NameChart: React.FC<NameChartProps> = ({
   );
 };
 
-export default NameChart;
+export default NamePopularityChart;
