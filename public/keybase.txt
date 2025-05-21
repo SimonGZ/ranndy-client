@@ -1,0 +1,68 @@
+==================================================================
+https://keybase.io/simonganz
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://ranndy.com
+  * I am simonganz (https://keybase.io/simonganz) on keybase.
+  * I have a public key with fingerprint E97F 5D41 2940 922E F911  87FF 499A 3897 3510 647A
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "eldest_kid": "0101e64afb2769aa14c876e33c7e53935f06626df432ba6f7f693ac0846751b1b74d0a",
+            "fingerprint": "e97f5d412940922ef91187ff499a38973510647a",
+            "host": "keybase.io",
+            "key_id": "499a38973510647a",
+            "kid": "0101e64afb2769aa14c876e33c7e53935f06626df432ba6f7f693ac0846751b1b74d0a",
+            "uid": "548f0add823f73dcb9a203b066fc2c19",
+            "username": "simonganz"
+        },
+        "service": {
+            "hostname": "ranndy.com",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1474346107,
+    "expire_in": 157680000,
+    "prev": "dd824ece0531418114f932d4903aa6dd6de2e49f13d87f665fd4930ca2c18886",
+    "seqno": 10,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v2.0.56
+Comment: https://keybase.io/crypto
+
+yMInAnicrZJbSBVBHMaPdtU6FlRIUUgrvZTVzs7s7M7JSAuVoggxukBxmN2d0SXP
+7vGc9aiJ0o166EJY+tCNAgu6WBIFBZEZ0u3YBTLJh8oKzS4PdqUgrFmxtx6bl2H+
+832/+X8z0xEcFUhP+dHfWj+tQktLSbY3VQbW9V6vrZUM16qRQrXSZjY8sXKLxb3w
+ZtuSQpIMZMAwotxQNEwoBcjUNcwgNDWmQgJVLmOsYIsjqBgUc41jAqkp6whrKjCA
+oSFLplKOxG2nlMWiMdvxBJYRjasWAgpBMlEUxgkAusY5IoRCnWhQBTJGmm8sc+O+
+QzRn0DhbYLuiJhbh4fb+of/PfVcO41Skc5lalq5ArkHLNAhVZGgIBjcVExBfGGcx
+h0aYUMftiOuUUmeLVJcjiXLCNpl/s36UEUmMOo5Vs8B0I8Iajbmea7rlol7medGQ
+b/Nqor6uihnhEULYsB1L3KIwJFgsbruOFAJCaXq2jwRIQxBhIGs5EquO2jEWtn2F
+qmFdFsM/hiUE0k+BmMlkFQIEdAAQJ1CxEJEhpdiysMUUhggH0BJPgrHKxR6UTSqC
+6rqOJT9TheMKtoB6tHQ4calDvcoYk+pu3dw4OpCSHhg7JtX/XoH0tMl/P92zr+OG
+FvVlbH+fPbN56UTv4vxEd5H0Yd6JlbN46ruXLbnBvJq2Y/XFV/cNxl83n19z6lWG
+OaX1yP1fwQdf9jRuyyvY39Pc0dk15vDRZDYp+Xmp5PLRZZ9X3P54xdu1daiw6kfa
+jf68mXc+nXnotXTnrzWHBoPLvfzz3R9C5Hdi/Ia7jS/nh6oPnXQyB6buHDACc3BF
+sSNfm36u/0HRpg3Bxc8L2w9kseTbljeNkbYJrat6yNJcO+t9+3rp95cXz9noS9VF
+oRWgk10PrK3qyDy9Y2d7eUPvUzzpe9fsvbnf5nbfm3q2r35hQ/HqJUrk2RMz8Kjv
+YORx8vhsfqWnoDjz24ym3frghYbkHwzRRHQ=
+=QdeF
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/simonganz
+
+==================================================================
