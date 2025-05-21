@@ -163,8 +163,8 @@ const SurnameRaceChart: React.FC<SurnameRaceChartProps> = ({
           const percentage = typeof value === "number" ? value : 0;
           const label = context.chart.data.labels?.[context.dataIndex] || "";
 
-          if (percentage > 30) {
-            // Show label and percentage on separate lines for > 30%
+          if (percentage > 20) {
+            // Show label and percentage on separate lines for > 20%
             return `${label}\n${percentage.toFixed(1)}%`;
           } else if (percentage > 10) {
             // Show only percentage for > 10%
