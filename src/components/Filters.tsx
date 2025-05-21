@@ -180,7 +180,7 @@ const Filters: React.FC<FiltersProps> = ({ query, onQueryChange, onClose }) => {
                     htmlFor="racePercent"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Race Percentile
+                    Minimum Race Percentile
                   </label>
                   <input
                     type="number"
