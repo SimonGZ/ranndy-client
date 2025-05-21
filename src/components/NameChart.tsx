@@ -229,6 +229,10 @@ const NameChart: React.FC<NameChartProps> = ({
           },
         },
       },
+      // Add this to disable data labels on the points for this specific chart
+      datalabels: {
+        display: false,
+      },
     },
   };
 
