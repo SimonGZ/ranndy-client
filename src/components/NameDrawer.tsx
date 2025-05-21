@@ -1,16 +1,16 @@
 import React, { useRef, useEffect } from "react"; // Removed useState
 import { Heart, Lock, X, Search, TrendingUp, PieChart } from "lucide-react"; // Added PieChart icon
 import {
-  DrawerProps, // Now includes namePair, activeChartType, setActiveChartType
+  DrawerProps,
   LastNameDetails,
   NameHistory,
   NamePair,
   SurnameRaceData,
   Name,
-} from "../types"; // Import new types
+} from "../types";
 import { useClickOutside } from "../hooks/useClickOutside";
 import NamePopularityChart from "./NamePopularityChart";
-import SurnameRaceChart from "./SurnameRaceChart"; // Import the new component
+import SurnameRaceChart from "./SurnameRaceChart";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -22,13 +22,11 @@ const createGoogleSearchUrl = (name: string, last: boolean) => {
   }
 };
 
-// Helper to convert string percentages to numbers
 const parseRaceData = (
   lastNameDetails: NamePair[1],
 ): SurnameRaceData | null => {
   if (!lastNameDetails) return null;
 
-  // Check if all required race percentage properties exist and are strings
   const requiredKeys: (keyof LastNameDetails)[] = [
     "pctwhite",
     "pctblack",
@@ -52,7 +50,6 @@ const parseRaceData = (
     return null;
   }
 
-  // Attempt to parse strings to numbers
   const parsedData = {
     pctWhite: parseFloat(lastNameDetails.pctwhite),
     pctBlack: parseFloat(lastNameDetails.pctblack),
@@ -76,8 +73,7 @@ const parseRaceData = (
 };
 
 const NameDrawer: React.FC<DrawerProps> = ({
-  // Use DrawerProps directly
-  namePair, // Use namePair instead of name
+  namePair,
   isOpen,
   onClose,
   onFavorite,
@@ -86,11 +82,10 @@ const NameDrawer: React.FC<DrawerProps> = ({
   isFavorite,
   isFirstNameLocked,
   isLastNameLocked,
-  activeChartType, // Use prop instead of local state
-  setActiveChartType, // Use prop instead of local state setter
+  activeChartType,
+  setActiveChartType,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
-  // Keep local state for fetched data and loading/error status
   const [nameHistory, setNameHistory] = React.useState<NameHistory[] | null>(
     null,
   );
@@ -99,11 +94,9 @@ const NameDrawer: React.FC<DrawerProps> = ({
 
   const [surnameRaceData, setSurnameRaceData] =
     React.useState<SurnameRaceData | null>(null);
-  // No local state for showRaceChart or showHistoryChart
 
   useClickOutside(drawerRef, onClose);
 
-  // Extract first and last name details from the pair
   const firstNameDetails = namePair ? namePair[0] : null;
   const lastNameDetails = namePair ? namePair[1] : null;
 
@@ -128,7 +121,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
       setNameHistory(null);
       setHistoryError(null);
     }
-  }, [isOpen, firstNameDetails, activeChartType]); // Depend on activeChartType
+  }, [isOpen, firstNameDetails, activeChartType]);
 
   // Parse surname race data when a name is selected and race chart is active
   useEffect(() => {
@@ -138,9 +131,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
       // Clear race data if drawer closes or race chart is not active
       setSurnameRaceData(null);
     }
-  }, [isOpen, lastNameDetails, activeChartType]); // Depend on activeChartType
-
-  // No need to reset state on close here, useEffects above handle clearing data
+  }, [isOpen, lastNameDetails, activeChartType]);
   // when isOpen becomes false or activeChartType changes away from the chart type.
 
   // Add keyboard event listener for Escape key
@@ -188,7 +179,6 @@ const NameDrawer: React.FC<DrawerProps> = ({
     }
   };
 
-  // Use simpleName for handlers that need the Name interface
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (simpleName) onFavorite(simpleName);
@@ -209,26 +199,24 @@ const NameDrawer: React.FC<DrawerProps> = ({
     onClose();
   };
 
-  // Toggle handlers now update the activeChartType state via prop
   const toggleHistoryChart = () => {
     if (activeChartType === "history") {
-      setActiveChartType("none"); // Hide history chart
+      setActiveChartType("none");
     } else {
-      setActiveChartType("history"); // Show history chart
+      setActiveChartType("history");
     }
   };
 
   const toggleRaceChart = () => {
     if (activeChartType === "race") {
-      setActiveChartType("none"); // Hide race chart
+      setActiveChartType("none");
     } else {
-      setActiveChartType("race"); // Show race chart
+      setActiveChartType("race");
     }
   };
 
-  if (!isOpen || !namePair) return null; // Check namePair instead of name
+  if (!isOpen || !namePair) return null;
 
-  // Use simpleName for display purposes
   const displayFirstName = simpleName?.first || "N/A";
   const displayLastName = simpleName?.last || "N/A";
   const displayGender = simpleName?.gender === "M" ? "Male" : "Female";
@@ -296,7 +284,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
               className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800"
             >
               <TrendingUp />
-              {activeChartType === "history" // Check activeChartType prop
+              {activeChartType === "history"
                 ? "Hide Popularity Chart"
                 : "Show Popularity Chart"}
             </button>
@@ -308,7 +296,7 @@ const NameDrawer: React.FC<DrawerProps> = ({
                 className="cursor-pointer flex items-center gap-2 p-2 w-full rounded-lg bg-teal-100 dark:bg-teal-900 hover:bg-teal-200 dark:hover:bg-teal-800"
               >
                 <PieChart />
-                {activeChartType === "race" // Check activeChartType prop
+                {activeChartType === "race"
                   ? "Hide Race Breakdown"
                   : "Show Race Breakdown"}
               </button>
