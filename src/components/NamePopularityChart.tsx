@@ -14,7 +14,6 @@ import {
 import { NameHistory } from "../types";
 import { useTheme } from "../ThemeContext";
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -31,14 +30,12 @@ interface NamePopularityChartProps {
   isLoading: boolean;
 }
 
-// Data reduction function - sample every N years
 const sampleData = (data: NameHistory[], sampleRate: number): NameHistory[] => {
   if (sampleRate <= 1) return data;
 
   return data.filter((_, index) => index % sampleRate === 0);
 };
 
-// Reduce data by decades
 const reduceByDecades = (data: NameHistory[]): NameHistory[] => {
   const decadeMap = new Map<number, NameHistory>();
 
