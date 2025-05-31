@@ -24,26 +24,76 @@ interface Query {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+const DEFAULT_QUERY: Query = {
+  rank: "high",
+  frequency: "high",
+  gender: "female",
+  year: 0, // 0 means 'any'
+  race: "any",
+  racePercent: 50,
+  fstartswith: "",
+  sstartswith: "",
+};
+
 function App() {
   const [names, setNames] = useState<Name[]>([]);
-  const [rawData, setRawData] = useState<NamePair[]>([]); // State to store raw API data
+  const [rawData, setRawData] = useState<NamePair[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  const [query, setQuery] = useState<Query>({
-    rank: "high",
-    frequency: "high",
-    gender: "female",
-    year: 0,
-    race: "any",
-    racePercent: 50,
-    fstartswith: "",
-    sstartswith: "",
+
+  // Initialize query state from URL parameters or use defaults
+  const [query, setQuery] = useState<Query>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlQuery: Partial<Query> = {};
+
+    // Parse parameters and override defaults
+    // Add basic validation for known enum values and numbers
+    const rank = params.get("r");
+    if (rank && (rank === "any" || rank === "high" || rank === "low"))
+      urlQuery.rank = rank;
+
+    const frequency = params.get("f");
+    if (
+      frequency &&
+      (frequency === "any" ||
+        frequency === "high" ||
+        frequency === "medium" ||
+        frequency === "low")
+    )
+      urlQuery.frequency = frequency;
+
+    const gender = params.get("g");
+    if (
+      gender &&
+      (gender === "any" || gender === "male" || gender === "female")
+    )
+      urlQuery.gender = gender;
+
+    const year = parseInt(params.get("y") || "", 10);
+    if (!isNaN(year)) urlQuery.year = year;
+
+    const race = params.get("rc");
+    // Assuming valid race values are handled by the backend/Filters component
+    if (race) urlQuery.race = race;
+
+    const racePercent = parseInt(params.get("rp") || "", 10);
+    if (!isNaN(racePercent)) urlQuery.racePercent = racePercent;
+
+    const fstartswith = params.get("fs");
+    if (fstartswith !== null) urlQuery.fstartswith = fstartswith;
+
+    const sstartswith = params.get("ss");
+    if (sstartswith !== null) urlQuery.sstartswith = sstartswith;
+
+    // Merge URL parameters with defaults
+    return { ...DEFAULT_QUERY, ...urlQuery };
   });
+
   const scrollTimeoutRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedNamePair, setSelectedNamePair] = useState<NamePair | null>(
     null,
-  ); // State to store the selected full name pair
-  // State to track which chart is active in the drawer ('none', 'history', 'race')
+  );
+
   const [activeChartType, setActiveChartType] = useState<
     "none" | "history" | "race"
   >("race"); // Default to race chart open
@@ -131,7 +181,6 @@ function App() {
     }
   };
 
-  // Helper functions to check status
   const isNameFavorite = (name: Name) => {
     return favorites.some(
       (f) => f.first === name.first && f.last === name.last,
@@ -211,6 +260,94 @@ function App() {
   useEffect(() => {
     getNames(true);
   }, [query]);
+
+  // Effect to synchronize query state with URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    // Add parameters if they differ from defaults or are non-empty strings
+    if (query.rank !== DEFAULT_QUERY.rank) params.set("r", query.rank);
+    if (query.frequency !== DEFAULT_QUERY.frequency)
+      params.set("f", query.frequency);
+    if (query.gender !== DEFAULT_QUERY.gender) params.set("g", query.gender);
+    // Only include year if it's not the default 0
+    if (query.year !== DEFAULT_QUERY.year)
+      params.set("y", query.year.toString());
+    if (query.race !== DEFAULT_QUERY.race) {
+      params.set("rc", query.race);
+      // Only include racePercent if race is not 'any' AND it's not the default 50
+      if (query.racePercent !== DEFAULT_QUERY.racePercent)
+        params.set("rp", query.racePercent.toString());
+    }
+    if (query.fstartswith) params.set("fs", query.fstartswith);
+    if (query.sstartswith) params.set("ss", query.sstartswith);
+
+    const newSearch = params.toString() ? `?${params.toString()}` : "";
+
+    // Use replaceState to avoid cluttering history with every filter change
+    // Only update if the search string has actually changed
+    if (window.location.search !== newSearch) {
+      history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${newSearch}${window.location.hash}`,
+      );
+    }
+  }, [query]);
+
+  // Effect to listen for popstate event (browser back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlQuery: Partial<Query> = {};
+
+      // Parse parameters similar to initial state logic
+      const rank = params.get("r");
+      if (rank && (rank === "any" || rank === "high" || rank === "low"))
+        urlQuery.rank = rank;
+
+      const frequency = params.get("f");
+      if (
+        frequency &&
+        (frequency === "any" ||
+          frequency === "high" ||
+          frequency === "medium" ||
+          frequency === "low")
+      )
+        urlQuery.frequency = frequency;
+
+      const gender = params.get("g");
+      if (
+        gender &&
+        (gender === "any" || gender === "male" || gender === "female")
+      )
+        urlQuery.gender = gender;
+
+      const year = parseInt(params.get("y") || "", 10);
+      if (!isNaN(year)) urlQuery.year = year;
+
+      const race = params.get("rc");
+      if (race) urlQuery.race = race;
+
+      const racePercent = parseInt(params.get("rp") || "", 10);
+      if (!isNaN(racePercent)) urlQuery.racePercent = racePercent;
+
+      const fstartswith = params.get("fs");
+      if (fstartswith !== null) urlQuery.fstartswith = fstartswith;
+
+      const sstartswith = params.get("ss");
+      if (sstartswith !== null) urlQuery.sstartswith = sstartswith;
+
+      // Update state - this will trigger the getNames effect
+      setQuery((prev) => ({ ...prev, ...urlQuery }));
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []); // Empty dependency array means this runs once on mount/unmount
 
   // Handle scrolling separately
   useEffect(() => {
