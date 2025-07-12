@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Name, NamePair } from "./types"; // Import new types
 import InfiniteScroll from "react-infinite-scroll-component";
 import NameDrawer from "./components/NameDrawer";
@@ -99,8 +99,6 @@ function App() {
   >("race"); // Default to race chart open
 
   const [favorites, setFavorites] = useLocalStorage<Name[]>("favorites", []);
-  const [lockedFirstName, setLockedFirstName] = useState<Name | null>(null);
-  const [lockedLastName, setLockedLastName] = useState<Name | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(() => {
@@ -149,37 +147,25 @@ function App() {
     }
   };
 
-  const handleLockFirst = (name: Name) => {
-    if (lockedFirstName?.first === name.first) {
-      setLockedFirstName(null);
-      setQuery((prev) => ({
+  const handleLockFirst = useCallback((name: Name) => {
+    setQuery((prev) => {
+      const isCurrentlyLocked = prev.fstartswith === name.first + "^";
+      return {
         ...prev,
-        fstartswith: "",
-      }));
-    } else {
-      setLockedFirstName(name);
-      setQuery((prev) => ({
-        ...prev,
-        fstartswith: name.first + "^",
-      }));
-    }
-  };
+        fstartswith: isCurrentlyLocked ? "" : name.first + "^",
+      };
+    });
+  }, []);
 
-  const handleLockLast = (name: Name) => {
-    if (lockedLastName?.last === name.last) {
-      setLockedLastName(null);
-      setQuery((prev) => ({
+  const handleLockLast = useCallback((name: Name) => {
+    setQuery((prev) => {
+      const isCurrentlyLocked = prev.sstartswith === name.last + "^";
+      return {
         ...prev,
-        sstartswith: "",
-      }));
-    } else {
-      setLockedLastName(name);
-      setQuery((prev) => ({
-        ...prev,
-        sstartswith: name.last + "^",
-      }));
-    }
-  };
+        sstartswith: isCurrentlyLocked ? "" : name.last + "^",
+      };
+    });
+  }, []);
 
   const isNameFavorite = (name: Name) => {
     return favorites.some(
@@ -188,11 +174,11 @@ function App() {
   };
 
   const isFirstNameLocked = (name: Name) => {
-    return lockedFirstName?.first === name.first;
+    return query.fstartswith === name.first + "^";
   };
 
   const isLastNameLocked = (name: Name) => {
-    return lockedLastName?.last === name.last;
+    return query.sstartswith === name.last + "^";
   };
 
   const handleFavoriteClick = (name: Name, e: React.MouseEvent) => {
@@ -243,8 +229,10 @@ function App() {
 
       // If this is an initial load (from filter change), replace the names and raw data
       // Otherwise, append the new names and raw data to the existing lists
-      setNames(isInitial ? newNames : [...names, ...newNames]);
-      setRawData(isInitial ? newRawData : [...rawData, ...newRawData]);
+      setNames((prevNames) => (isInitial ? newNames : [...prevNames, ...newNames]));
+      setRawData((prevRawData) =>
+        isInitial ? newRawData : [...prevRawData, ...newRawData],
+      );
       setLoading(false);
 
       // Set hasMore based on whether we got a full page of results
