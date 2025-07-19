@@ -229,7 +229,9 @@ function App() {
 
       // If this is an initial load (from filter change), replace the names and raw data
       // Otherwise, append the new names and raw data to the existing lists
-      setNames((prevNames) => (isInitial ? newNames : [...prevNames, ...newNames]));
+      setNames((prevNames) =>
+        isInitial ? newNames : [...prevNames, ...newNames],
+      );
       setRawData((prevRawData) =>
         isInitial ? newRawData : [...prevRawData, ...newRawData],
       );
