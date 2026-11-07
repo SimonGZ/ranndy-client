@@ -1,597 +1,371 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Name, NamePair } from "./types"; // Import new types
+import { useCallback, useEffect, useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import NameDrawer from "./components/NameDrawer";
-import Filters from "./components/Filters";
-import NameSkeleton from "./components/NameSkeleton";
+import { Moon, SlidersHorizontal, Sun } from "lucide-react";
+import { Name, NamePair } from "./types";
+import {
+  DEFAULT_QUERY,
+  PAGE_SIZE,
+  Query,
+  isLock,
+  lockValue,
+  lockedName,
+  namesUrl,
+  parseQuery,
+  summarize,
+  toSearch,
+} from "./lib/query";
 import { useTheme } from "./ThemeContext";
-import { Moon, Sun, Filter, X, Heart } from "lucide-react";
-import { useLocalStorage } from "./hooks/useLocalStorage";
-import "./App.css";
-import "./dropdown-custom.css";
-import "react-widgets/styles.css";
-
-interface Query {
-  rank: "any" | "high" | "low";
-  frequency: "any" | "high" | "medium" | "low";
-  gender: "any" | "male" | "female";
-  year: number;
-  race: string;
-  racePercent: number;
-  fstartswith: string;
-  sstartswith: string;
-}
+import { useMediaQuery } from "./hooks/useMediaQuery";
+import Filters from "./components/Filters";
+import FilterSheet from "./components/FilterSheet";
+import NameDrawer from "./components/NameDrawer";
+import NameRow from "./components/NameRow";
+import NameSkeleton from "./components/NameSkeleton";
+import { EmptyState, EndOfList, ErrorState } from "./components/States";
+import { LockChip, Wordmark } from "./components/ui";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-const DEFAULT_QUERY: Query = {
-  rank: "high",
-  frequency: "high",
-  gender: "female",
-  year: 0, // 0 means 'any'
-  race: "any",
-  racePercent: 50,
-  fstartswith: "",
-  sstartswith: "",
-};
+type Status = "loading" | "ready" | "error";
+interface NoMatch {
+  first: boolean;
+  last: boolean;
+}
+
+const toName = (p: NamePair): Name => ({
+  first: p[0]?.name ?? "",
+  last: p[1]?.name ?? "",
+  gender: p[0]?.gender ?? "",
+});
 
 function App() {
-  const [names, setNames] = useState<Name[]>([]);
-  const [rawData, setRawData] = useState<NamePair[]>([]);
+  const [query, setQuery] = useState<Query>(() => parseQuery(window.location.search));
+  const [pairs, setPairs] = useState<NamePair[]>([]);
   const [hasMore, setHasMore] = useState(true);
-
-  // Initialize query state from URL parameters or use defaults
-  const [query, setQuery] = useState<Query>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlQuery: Partial<Query> = {};
-
-    // Parse parameters and override defaults
-    // Add basic validation for known enum values and numbers
-    const rank = params.get("r");
-    if (rank && (rank === "any" || rank === "high" || rank === "low"))
-      urlQuery.rank = rank;
-
-    const frequency = params.get("f");
-    if (
-      frequency &&
-      (frequency === "any" ||
-        frequency === "high" ||
-        frequency === "medium" ||
-        frequency === "low")
-    )
-      urlQuery.frequency = frequency;
-
-    const gender = params.get("g");
-    if (
-      gender &&
-      (gender === "any" || gender === "male" || gender === "female")
-    )
-      urlQuery.gender = gender;
-
-    const year = parseInt(params.get("y") || "", 10);
-    if (!isNaN(year)) urlQuery.year = year;
-
-    const race = params.get("rc");
-    // Assuming valid race values are handled by the backend/Filters component
-    if (race) urlQuery.race = race;
-
-    const racePercent = parseInt(params.get("rp") || "", 10);
-    if (!isNaN(racePercent)) urlQuery.racePercent = racePercent;
-
-    const fstartswith = params.get("fs");
-    if (fstartswith !== null) urlQuery.fstartswith = fstartswith;
-
-    const sstartswith = params.get("ss");
-    if (sstartswith !== null) urlQuery.sstartswith = sstartswith;
-
-    // Merge URL parameters with defaults
-    return { ...DEFAULT_QUERY, ...urlQuery };
-  });
-
-  const scrollTimeoutRef = useRef<number | null>(null);
+  const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState<string | null>(null);
-  const [selectedNamePair, setSelectedNamePair] = useState<NamePair | null>(
-    null,
-  );
+  const [noMatch, setNoMatch] = useState<NoMatch | null>(null);
 
-  const [activeChartType, setActiveChartType] = useState<
-    "none" | "history" | "race"
-  >("race"); // Default to race chart open
+  const [selected, setSelected] = useState<NamePair | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
 
-  const [favorites, setFavorites] = useLocalStorage<Name[]>("favorites", []);
-  const [showFavorites, setShowFavorites] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(() => {
-    // Check if we're on mobile or desktop at initial load
-    return window.matchMedia("(min-width: 640px)").matches;
-  });
-
-  // Handler functions
-  const handleNameClick = (name: Name) => {
-    // Find the corresponding raw data pair
-    const clickedPair = rawData.find(
-      (pair) => pair[0]?.name === name.first && pair[1]?.name === name.last,
-    );
-    setSelectedNamePair(clickedPair || null);
-    // When a new name is clicked, the drawer will open with the chart type
-    // currently stored in activeChartType (defaulting to 'race' or last chosen)
-  };
-
-  const handleDrawerClose = () => {
-    setSelectedNamePair(null);
-  };
-
-  const handleFavorite = (name: Name) => {
-    const isFavorite = favorites.some(
-      (f) => f.first === name.first && f.last === name.last,
-    );
-
-    if (isFavorite) {
-      setFavorites(
-        favorites.filter((f) => f.first !== name.first || f.last !== name.last),
-      );
-    } else {
-      setFavorites([...favorites, name]);
-    }
-  };
-
-  const handleClearFavorites = () => {
-    if (favorites.length === 0) return; // No need to confirm if there's nothing to clear
-
-    if (
-      window.confirm(
-        "Are you sure you want to clear all favorites? This cannot be undone.",
-      )
-    ) {
-      setFavorites([]);
-    }
-  };
-
-  const handleLockFirst = useCallback((name: Name) => {
-    setQuery((prev) => {
-      const isCurrentlyLocked = prev.fstartswith === name.first + "^";
-      return {
-        ...prev,
-        fstartswith: isCurrentlyLocked ? "" : name.first + "^",
-      };
-    });
-  }, []);
-
-  const handleLockLast = useCallback((name: Name) => {
-    setQuery((prev) => {
-      const isCurrentlyLocked = prev.sstartswith === name.last + "^";
-      return {
-        ...prev,
-        sstartswith: isCurrentlyLocked ? "" : name.last + "^",
-      };
-    });
-  }, []);
-
-  const isNameFavorite = (name: Name) => {
-    return favorites.some(
-      (f) => f.first === name.first && f.last === name.last,
-    );
-  };
-
-  const isFirstNameLocked = (name: Name) => {
-    return query.fstartswith === name.first + "^";
-  };
-
-  const isLastNameLocked = (name: Name) => {
-    return query.sstartswith === name.last + "^";
-  };
-
-  const handleFavoriteClick = (name: Name, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the drawer
-    handleFavorite(name);
-  };
-
-  const getNames = async (isInitial: boolean = false) => {
-    if (isInitial) {
-      setLoading(true);
-    }
-
-    setError(null);
-    try {
-      let url = `${API_URL}/api/names?`;
-      const params = [];
-
-      if (query.rank !== "any") params.push(`rank=${query.rank}`);
-      if (query.frequency !== "any")
-        params.push(`frequency=${query.frequency}`);
-      if (query.gender !== "any") params.push(`gender=${query.gender}`);
-      params.push(`year=${query.year}`);
-      if (query.race !== "any") {
-        params.push(`race=${query.race}`);
-        params.push(`race=${query.racePercent}`);
-      }
-      if (query.fstartswith) params.push(`fstartswith=${query.fstartswith}`);
-      if (query.sstartswith) params.push(`sstartswith=${query.sstartswith}`);
-      params.push("limit=50");
-
-      url += params.join("&");
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.errors?.[0]?.message || "API Error");
-      }
-
-      const data = await response.json();
-      const newRawData: NamePair[] = data.names; // Store the raw data
-
-      const newNames: Name[] = newRawData.map((item) => ({
-        first: item[0] ? item[0].name : "NoneMatching",
-        last: item[1] ? item[1].name : "NoneMatching",
-        gender: item[0] ? item[0].gender : "NoneMatching", // Gender is on the first name object
-      }));
-
-      // If this is an initial load (from filter change), replace the names and raw data
-      // Otherwise, append the new names and raw data to the existing lists
-      setNames((prevNames) =>
-        isInitial ? newNames : [...prevNames, ...newNames],
-      );
-      setRawData((prevRawData) =>
-        isInitial ? newRawData : [...prevRawData, ...newRawData],
-      );
-      setLoading(false);
-
-      // Set hasMore based on whether we got a full page of results
-      setHasMore(newNames.length === 50);
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-      console.error("Error fetching names:", err);
-    }
-  };
-
-  // Initial load when filters change
-  useEffect(() => {
-    getNames(true);
-  }, [query]);
-
-  // Effect to synchronize query state with URL parameters
-  useEffect(() => {
-    const params = new URLSearchParams();
-
-    // Add parameters if they differ from defaults or are non-empty strings
-    if (query.rank !== DEFAULT_QUERY.rank) params.set("r", query.rank);
-    if (query.frequency !== DEFAULT_QUERY.frequency)
-      params.set("f", query.frequency);
-    if (query.gender !== DEFAULT_QUERY.gender) params.set("g", query.gender);
-    // Only include year if it's not the default 0
-    if (query.year !== DEFAULT_QUERY.year)
-      params.set("y", query.year.toString());
-    if (query.race !== DEFAULT_QUERY.race) {
-      params.set("rc", query.race);
-      // Only include racePercent if race is not 'any' AND it's not the default 50
-      if (query.racePercent !== DEFAULT_QUERY.racePercent)
-        params.set("rp", query.racePercent.toString());
-    }
-    if (query.fstartswith) params.set("fs", query.fstartswith);
-    if (query.sstartswith) params.set("ss", query.sstartswith);
-
-    const newSearch = params.toString() ? `?${params.toString()}` : "";
-
-    // Use replaceState to avoid cluttering history with every filter change
-    // Only update if the search string has actually changed
-    if (window.location.search !== newSearch) {
-      history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}${newSearch}${window.location.hash}`,
-      );
-    }
-  }, [query]);
-
-  // Effect to listen for popstate event (browser back/forward)
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const urlQuery: Partial<Query> = {};
-
-      // Parse parameters similar to initial state logic
-      const rank = params.get("r");
-      if (rank && (rank === "any" || rank === "high" || rank === "low"))
-        urlQuery.rank = rank;
-
-      const frequency = params.get("f");
-      if (
-        frequency &&
-        (frequency === "any" ||
-          frequency === "high" ||
-          frequency === "medium" ||
-          frequency === "low")
-      )
-        urlQuery.frequency = frequency;
-
-      const gender = params.get("g");
-      if (
-        gender &&
-        (gender === "any" || gender === "male" || gender === "female")
-      )
-        urlQuery.gender = gender;
-
-      const year = parseInt(params.get("y") || "", 10);
-      if (!isNaN(year)) urlQuery.year = year;
-
-      const race = params.get("rc");
-      if (race) urlQuery.race = race;
-
-      const racePercent = parseInt(params.get("rp") || "", 10);
-      if (!isNaN(racePercent)) urlQuery.racePercent = racePercent;
-
-      const fstartswith = params.get("fs");
-      if (fstartswith !== null) urlQuery.fstartswith = fstartswith;
-
-      const sstartswith = params.get("ss");
-      if (sstartswith !== null) urlQuery.sstartswith = sstartswith;
-
-      // Update state - this will trigger the getNames effect
-      setQuery((prev) => ({ ...prev, ...urlQuery }));
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []); // Empty dependency array means this runs once on mount/unmount
-
-  // Handle scrolling separately
-  useEffect(() => {
-    // Clear any existing timeout
-    if (scrollTimeoutRef.current !== null) {
-      window.clearTimeout(scrollTimeoutRef.current);
-    }
-
-    // Set a new timeout to scroll after a brief delay
-    scrollTimeoutRef.current = window.setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 100);
-
-    // Cleanup
-    return () => {
-      if (scrollTimeoutRef.current !== null) {
-        window.clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [query]);
-
+  const isDesktop = useMediaQuery("(min-width: 640px)");
+  const canHover = useMediaQuery("(hover: hover) and (pointer: fine)");
   const { isDarkMode, toggleDarkMode } = useTheme();
 
-  return (
-    <div className="min-h-screen font-sans bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto p-4 max-w-5xl">
-        <header className="bg-sky-700 dark:bg-sky-900 text-white p-4 rounded-t-lg flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Name Generator</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
-              aria-label="Toggle filters"
-            >
-              <Filter size={24} className={showFilters ? "fill-current" : ""} />
-            </button>
-            <button
-              onClick={() => setShowFavorites(!showFavorites)}
-              className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors relative group"
-              aria-label="Toggle favorites"
-            >
-              <Heart
-                size={24}
-                className={showFavorites ? "fill-current" : ""}
-              />
-              {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {favorites.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-lg hover:bg-sky-600 dark:hover:bg-sky-800 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
-            </button>
-          </div>
-        </header>
+  const abortRef = useRef<AbortController | null>(null);
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
-          {/* Sidebar Container */}
-          <div
-            className={`
-              ${showFilters || showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
-              sm:sticky sm:top-2
-              bg-white dark:bg-gray-800
-              p-4 rounded-lg shadow
-              transition-all duration-300
-              sm:max-h-[calc(100vh-2rem)]
-              `}
-          >
-            {/* Filters Content */}
-            <div
-              className={`
-                ${showFilters ? "block" : "hidden"}
-                sm:overflow-auto
-                ${showFavorites ? "sm:max-h-[60vh]" : "sm:max-h-[calc(100vh-2rem)]"}
-                `}
-            >
-              <Filters
-                query={query}
-                onQueryChange={(newQueryValues) => {
-                  setQuery((prev) => ({
-                    ...prev,
-                    ...newQueryValues,
-                  }));
-                }}
-                onClose={() => setShowFilters(false)}
-              />
-            </div>
+  const updateQuery = useCallback((changes: Partial<Query>) => {
+    setQuery((prev) => ({ ...prev, ...changes }));
+  }, []);
 
-            <div
-              className={`
-    ${showFavorites ? "block sm:flex sm:flex-col" : "hidden"}
-    dark:border-gray-700
-    px-4
-    ${showFilters ? "sm:h-[30vh] border-t mt-4 pt-4" : "sm:h-[calc(100vh-2rem)]"}
-    `}
-            >
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold dark:text-white mb-4">
-                  Favorites ({favorites.length})
-                </h2>
-                <button
-                  onClick={() => setShowFavorites(false)}
-                  className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                  aria-label="Close favorites"
-                >
-                  <X size={24} className="text-gray-700 dark:text-white" />
-                </button>
-              </div>
+  const showToast = useCallback((text: string) => {
+    setToast({ text, id: Date.now() });
+  }, []);
 
-              {favorites.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                  No favorites yet
-                </p>
-              ) : (
-                <>
-                  <div className="space-y-2 overflow-y-auto flex-1">
-                    {favorites.map((name, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleNameClick(name)}
-                        className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                      >
-                        <span className="dark:text-white">
-                          {name.first} {name.last}
-                        </span>
-                        <button
-                          onClick={(e) => handleFavoriteClick(name, e)}
-                          className="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
-                          aria-label={`Remove ${name.first} ${name.last} from favorites`}
-                        >
-                          <Heart size={20} className="fill-current" />
-                        </button>
-                      </div>
-                    ))}
-                    {/* Clear Favorites Button */}
-                    <div className="mt-2 pt-2">
-                      <button
-                        onClick={handleClearFavorites}
-                        className="cursor-pointer w-full py-2 px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 text-sm font-medium rounded-md transition-colors"
-                        aria-label="Clear favorites"
-                      >
-                        Clear Favorites
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 1800);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
-          {/* End Sidebar */}
+  // ---------- fetching ----------
+  const fetchPage = useCallback(async (q: Query, initial: boolean) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    if (initial) setStatus("loading");
+    setError(null);
 
-          {/* Names List */}
-          <div
-            className={`
-            bg-white dark:bg-gray-800
-            p-4 rounded-lg shadow
-            ${!showFilters && !showFavorites ? "col-span-full px-4" : "col-span-2"}
-          `}
-          >
-            <h2 className="text-lg font-semibold mb-4 dark:text-white">
-              Generated Names
-            </h2>
-            {error && <div className="text-red-500 mb-4">{error}</div>}
+    try {
+      const res = await fetch(namesUrl(API_URL, q), { signal: controller.signal });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.errors?.[0]?.message || `The server returned ${res.status}.`);
+      }
+      const page: NamePair[] = body.names ?? [];
+      // With no match, the API echoes the typed prefix back without an id.
+      const valid = page.filter((p) => p[0]?.id && p[1]?.id);
 
-            <InfiniteScroll
-              dataLength={names.length}
-              next={() => getNames(false)}
-              hasMore={hasMore}
-              loader={
-                <div className="text-center p-4 dark:text-gray-300">
-                  Loading more names...
-                </div>
+      if (initial) {
+        setPairs(valid);
+        setNoMatch(
+          valid.length === 0
+            ? {
+                first: page.length > 0 && page.every((p) => !p[0]?.id),
+                last: page.length > 0 && page.every((p) => !p[1]?.id),
               }
-              endMessage={
-                <div className="text-center p-4 text-gray-500 dark:text-gray-400">
-                  No more names to load.
-                </div>
-              }
-            >
-              {loading ? (
-                <NameSkeleton count={50} />
-              ) : (
-                <div className="text-center font-semibold text-2xl">
-                  {names.map((name, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleNameClick(name)}
-                      className={
-                        index % 2 === 0
-                          ? "cursor-pointer p-3 bg-gray-50 hover:bg-blue-500 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none dark:text-white"
-                          : "cursor-pointer p-3 border-b border-gray-200 hover:bg-blue-500 dark:border-gray-600 last:border-none dark:text-white"
-                      }
-                    >
-                      {name.first} {name.last}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </InfiniteScroll>
-          </div>
-        </div>
-        {/* Drawer component with all necessary props */}
-        <NameDrawer
-          namePair={selectedNamePair} // Pass the full name pair
-          isOpen={!!selectedNamePair}
-          onClose={handleDrawerClose}
-          // Pass the simplified Name object to handlers that only need it
-          onFavorite={
-            selectedNamePair ? (name) => handleFavorite(name) : () => {} // Provide a no-op function if no name is selected
-          }
-          onLockFirst={
-            selectedNamePair ? (name) => handleLockFirst(name) : () => {} // Provide a no-op function if no name is selected
-          }
-          onLockLast={
-            selectedNamePair ? (name) => handleLockLast(name) : () => {} // Provide a no-op function if no name is selected
-          }
-          // Check favorite/locked status using the simplified Name object derived from the pair
-          isFavorite={
-            selectedNamePair
-              ? isNameFavorite({
-                  first: selectedNamePair[0]?.name || "NoneMatching",
-                  last: selectedNamePair[1]?.name || "NoneMatching",
-                  gender: selectedNamePair[0]?.gender || "NoneMatching",
-                })
-              : false
-          }
-          isFirstNameLocked={
-            selectedNamePair
-              ? isFirstNameLocked({
-                  first: selectedNamePair[0]?.name || "NoneMatching",
-                  last: selectedNamePair[1]?.name || "NoneMatching",
-                  gender: selectedNamePair[0]?.gender || "NoneMatching",
-                })
-              : false
-          }
-          isLastNameLocked={
-            selectedNamePair
-              ? isLastNameLocked({
-                  first: selectedNamePair[0]?.name || "NoneMatching",
-                  last: selectedNamePair[1]?.name || "NoneMatching",
-                  gender: selectedNamePair[0]?.gender || "NoneMatching",
-                })
-              : false
-          }
-          // Pass chart visibility state and setter
-          activeChartType={activeChartType}
-          setActiveChartType={setActiveChartType}
+            : null,
+        );
+      } else {
+        setPairs((prev) => [...prev, ...valid]);
+      }
+      setHasMore(page.length === PAGE_SIZE && valid.length > 0);
+      setStatus("ready");
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      console.error("Error fetching names:", err);
+      setError((err as Error).message);
+      setStatus("error");
+      setHasMore(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPage(query, true);
+    setExpandedIndex(null);
+    return () => abortRef.current?.abort();
+  }, [query, fetchPage]);
+
+  // ---------- URL sync ----------
+  useEffect(() => {
+    const search = toSearch(query);
+    if (window.location.search !== search) {
+      history.replaceState(null, "", `${window.location.pathname}${search}${window.location.hash}`);
+    }
+  }, [query]);
+
+  useEffect(() => {
+    const onPop = () => setQuery(parseQuery(window.location.search));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // New filters start at the top of the list.
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0 });
+  }, [query]);
+
+  // ---------- actions ----------
+  const lockedFirst = lockedName(query.fstartswith);
+  const lockedLast = lockedName(query.sstartswith);
+
+  const copyName = async (name: Name) => {
+    const text = `${name.first} ${name.last}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(`Copied “${text}”`);
+    } catch {
+      showToast("Couldn’t copy. Select the name and copy it instead.");
+    }
+  };
+
+  const toggleLockFirst = (name: Name) => {
+    const locked = query.fstartswith === lockValue(name.first);
+    updateQuery({ fstartswith: locked ? "" : lockValue(name.first) });
+    showToast(locked ? `Unlocked “${name.first}”` : `Locked first name “${name.first}”`);
+  };
+
+  const toggleLockLast = (name: Name) => {
+    const locked = query.sstartswith === lockValue(name.last);
+    updateQuery({ sstartswith: locked ? "" : lockValue(name.last) });
+    showToast(locked ? `Unlocked “${name.last}”` : `Locked surname “${name.last}”`);
+  };
+
+  const lockChips = (lockedFirst || lockedLast) && (
+    <>
+      {lockedFirst && (
+        <LockChip name={lockedFirst} onUnlock={() => updateQuery({ fstartswith: "" })} />
+      )}
+      {lockedLast && (
+        <LockChip name={lockedLast} onUnlock={() => updateQuery({ sstartswith: "" })} />
+      )}
+    </>
+  );
+
+  // ---------- list body ----------
+  const renderEmpty = () => {
+    const firstLetters = !isLock(query.fstartswith) && query.fstartswith;
+    const lastLetters = !isLock(query.sstartswith) && query.sstartswith;
+    if (noMatch?.first && lockedFirst) {
+      return (
+        <EmptyState
+          title={`No names with “${lockedFirst}” match these filters`}
+          body="The locked first name isn’t in the data for this gender or birth year."
+          action={`Unlock ${lockedFirst}`}
+          onAction={() => updateQuery({ fstartswith: "" })}
         />
+      );
+    }
+    if (noMatch?.first && firstLetters) {
+      return (
+        <EmptyState
+          mark={`“${firstLetters}…”`}
+          title={`No first names start with “${firstLetters}”`}
+          body="Try fewer letters, or set Popularity to Any to include rarer names."
+          action="Clear letters"
+          onAction={() => updateQuery({ fstartswith: "" })}
+        />
+      );
+    }
+    if (noMatch?.last && lastLetters) {
+      return (
+        <EmptyState
+          mark={`“${lastLetters}…”`}
+          title={`No surnames start with “${lastLetters}”`}
+          body="Try fewer letters, or set Frequency to Any to include rarer surnames."
+          action="Clear letters"
+          onAction={() => updateQuery({ sstartswith: "" })}
+        />
+      );
+    }
+    return (
+      <EmptyState
+        title="No names match these filters"
+        body="Try setting one of the filters back to Any."
+        action="Reset filters"
+        onAction={() => setQuery(DEFAULT_QUERY)}
+      />
+    );
+  };
+
+  const renderList = () => {
+    if (status === "loading") return <NameSkeleton count={14} />;
+    if (status === "error" && pairs.length === 0)
+      return <ErrorState detail={error ?? undefined} onRetry={() => fetchPage(query, true)} />;
+    if (pairs.length === 0) return renderEmpty();
+
+    return (
+      <InfiniteScroll
+        dataLength={pairs.length}
+        next={() => fetchPage(query, false)}
+        hasMore={hasMore}
+        loader={<p className="py-4 text-center text-[0.85rem] text-muted">Loading more names…</p>}
+        endMessage={status === "error" ? null : <EndOfList />}
+        style={{ overflow: "visible" }}
+      >
+        <ul className={canHover ? "grid gap-px p-2" : ""}>
+          {pairs.map((pair, i) => {
+            const name = toName(pair);
+            return (
+              <NameRow
+                key={`${i}-${name.first}-${name.last}`}
+                name={name}
+                lockedFirst={!!lockedFirst}
+                lockedLast={!!lockedLast}
+                expanded={expandedIndex === i}
+                canHover={canHover}
+                onToggle={() => setExpandedIndex(expandedIndex === i ? null : i)}
+                onOpen={() => setSelected(pair)}
+                onCopy={() => copyName(name)}
+                onLockFirst={() => toggleLockFirst(name)}
+                onLockLast={() => toggleLockLast(name)}
+              />
+            );
+          })}
+        </ul>
+        {status === "error" && (
+          <ErrorState compact detail={error ?? undefined} onRetry={() => fetchPage(query, false)} />
+        )}
+      </InfiniteScroll>
+    );
+  };
+
+  const selectedName = selected ? toName(selected) : null;
+  const iconButton =
+    "grid h-9 w-9 cursor-pointer place-items-center rounded-lg text-muted hover:bg-sunk hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
+
+  return (
+    <div className="min-h-dvh">
+      <header className="sticky top-0 z-20 border-b border-line bg-surface">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-1 pr-2.5 pl-[max(1rem,env(safe-area-inset-left))] sm:px-6">
+          <h1 className="text-[1.45rem] leading-none">
+            <Wordmark />
+          </h1>
+          <span className="flex-1" />
+          <button
+            type="button"
+            className={iconButton}
+            onClick={() => (isDesktop ? setShowSidebar(!showSidebar) : setSheetOpen(true))}
+            aria-label={isDesktop ? (showSidebar ? "Hide filters" : "Show filters") : "Edit filters"}
+            aria-pressed={isDesktop ? showSidebar : undefined}
+          >
+            <SlidersHorizontal size={19} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={iconButton}
+            onClick={toggleDarkMode}
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDarkMode ? <Sun size={19} aria-hidden="true" /> : <Moon size={19} aria-hidden="true" />}
+          </button>
+        </div>
+
+        {/* Phones: one summary line instead of an open sidebar */}
+        <div className="grid gap-1.5 px-4 pb-2.5 sm:hidden">
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className="flex min-w-0 cursor-pointer items-center gap-1.5 py-1 text-left text-[0.86rem] font-medium text-ink"
+            aria-label={`Filters: ${summarize(query)}. Edit filters`}
+          >
+            <SlidersHorizontal size={15} className="shrink-0 text-muted" aria-hidden="true" />
+            <span className="truncate">{summarize(query)}</span>
+          </button>
+          {lockChips && <div className="flex flex-wrap gap-1.5">{lockChips}</div>}
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-5xl sm:flex sm:gap-6 sm:px-6 sm:py-6">
+        {isDesktop && showSidebar && (
+          <aside
+            aria-label="Filters"
+            className="sticky top-20 max-h-[calc(100dvh-6.5rem)] w-72 shrink-0 self-start overflow-y-auto rounded-xl border border-line bg-surface p-5"
+          >
+            <Filters query={query} onQueryChange={updateQuery} idPrefix="side" />
+          </aside>
+        )}
+
+        <main className="min-w-0 flex-1">
+          {isDesktop && lockChips && <div className="mb-3 flex flex-wrap gap-1.5">{lockChips}</div>}
+          <div className="sm:rounded-xl sm:border sm:border-line sm:bg-surface" aria-busy={status === "loading"}>
+            {renderList()}
+          </div>
+        </main>
+      </div>
+
+      {!isDesktop && (
+        <FilterSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          query={query}
+          onQueryChange={updateQuery}
+        />
+      )}
+
+      <NameDrawer
+        namePair={selected}
+        onClose={() => setSelected(null)}
+        onCopy={() => selectedName && copyName(selectedName)}
+        onLockFirst={() => selectedName && toggleLockFirst(selectedName)}
+        onLockLast={() => selectedName && toggleLockLast(selectedName)}
+        isFirstNameLocked={!!selectedName && query.fstartswith === lockValue(selectedName.first)}
+        isLastNameLocked={!!selectedName && query.sstartswith === lockValue(selectedName.last)}
+        birthYear={query.year}
+      />
+
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-50 flex justify-center px-4"
+      >
+        {toast && (
+          <span
+            key={toast.id}
+            className="max-w-full truncate rounded-lg bg-ink px-3.5 py-2 text-[0.85rem] text-paper shadow-lg"
+          >
+            {toast.text}
+          </span>
+        )}
       </div>
     </div>
   );

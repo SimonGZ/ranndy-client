@@ -1,0 +1,138 @@
+import { Copy, Lock, LockOpen } from "lucide-react";
+import { Name } from "../types";
+
+interface NameRowProps {
+  name: Name;
+  lockedFirst: boolean;
+  lockedLast: boolean;
+  /** Touch screens: this row has been tapped and shows its actions. */
+  expanded: boolean;
+  /** Mouse/trackpad: actions appear on hover and a click opens details. */
+  canHover: boolean;
+  onToggle: () => void;
+  onOpen: () => void;
+  onCopy: () => void;
+  onLockFirst: () => void;
+  onLockLast: () => void;
+}
+
+const Part = ({ text, locked }: { text: string; locked: boolean }) => (
+  <span className={locked ? "locked-part" : undefined}>{text}</span>
+);
+
+export default function NameRow({
+  name,
+  lockedFirst,
+  lockedLast,
+  expanded,
+  canHover,
+  onToggle,
+  onOpen,
+  onCopy,
+  onLockFirst,
+  onLockLast,
+}: NameRowProps) {
+  const full = `${name.first} ${name.last}`;
+  const LockIcon = (on: boolean) => (on ? LockOpen : Lock);
+
+  if (canHover) {
+    const FirstIcon = LockIcon(lockedFirst);
+    const LastIcon = LockIcon(lockedLast);
+    const iconBtn =
+      "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md px-2 text-[0.78rem] font-medium text-muted hover:bg-sunk hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
+    return (
+      <li className="group flex items-center gap-2 rounded-lg px-3 hover:bg-paper focus-within:bg-paper">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="min-w-0 flex-1 cursor-pointer truncate py-2 text-left font-display text-2xl leading-snug focus-visible:outline-none"
+        >
+          <Part text={name.first} locked={lockedFirst} />{" "}
+          <Part text={name.last} locked={lockedLast} />
+        </button>
+        <div className="flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <button type="button" className={iconBtn} onClick={onCopy} aria-label={`Copy ${full}`}>
+            <Copy size={16} aria-hidden="true" />
+            Copy
+          </button>
+          <button
+            type="button"
+            className={`${iconBtn} ${lockedFirst ? "bg-mark text-mark-ink" : ""}`}
+            onClick={onLockFirst}
+            aria-pressed={lockedFirst}
+            aria-label={`${lockedFirst ? "Unlock" : "Lock"} first name ${name.first}`}
+          >
+            <FirstIcon size={16} aria-hidden="true" />
+            First
+          </button>
+          <button
+            type="button"
+            className={`${iconBtn} ${lockedLast ? "bg-mark text-mark-ink" : ""}`}
+            onClick={onLockLast}
+            aria-pressed={lockedLast}
+            aria-label={`${lockedLast ? "Unlock" : "Lock"} surname ${name.last}`}
+          >
+            <LastIcon size={16} aria-hidden="true" />
+            Last
+          </button>
+        </div>
+      </li>
+    );
+  }
+
+  const actionBtn =
+    "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.82rem] font-medium focus-visible:outline-2 focus-visible:outline-accent";
+  const off = "border-line bg-surface text-ink";
+  const on = "border-transparent bg-mark text-mark-ink";
+
+  return (
+    <li className={`border-b border-line last:border-b-0 ${expanded ? "bg-surface" : ""}`}>
+      <div className="flex items-center">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={expanded}
+          className="min-w-0 flex-1 truncate px-4 py-2.5 text-left font-display text-[1.35rem] leading-snug focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+        >
+          <Part text={name.first} locked={lockedFirst} />{" "}
+          <Part text={name.last} locked={lockedLast} />
+        </button>
+        {expanded && (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="shrink-0 cursor-pointer py-2 pr-4 pl-1 text-[0.82rem] font-medium text-accent"
+          >
+            Details ›
+          </button>
+        )}
+      </div>
+      {expanded && (
+        <div className="flex flex-wrap gap-1.5 px-3.5 pb-3">
+          <button type="button" className={`${actionBtn} ${off}`} onClick={onCopy}>
+            <Copy size={14} aria-hidden="true" />
+            Copy
+          </button>
+          <button
+            type="button"
+            className={`${actionBtn} ${lockedFirst ? on : off}`}
+            onClick={onLockFirst}
+            aria-pressed={lockedFirst}
+          >
+            <Lock size={14} aria-hidden="true" />
+            {lockedFirst ? "Unlock first" : "Lock first"}
+          </button>
+          <button
+            type="button"
+            className={`${actionBtn} ${lockedLast ? on : off}`}
+            onClick={onLockLast}
+            aria-pressed={lockedLast}
+          >
+            <Lock size={14} aria-hidden="true" />
+            {lockedLast ? "Unlock last" : "Lock last"}
+          </button>
+        </div>
+      )}
+    </li>
+  );
+}

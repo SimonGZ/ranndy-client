@@ -1,26 +1,16 @@
-import React from "react";
+const WIDTHS = ["62%", "48%", "70%", "55%", "66%", "44%", "58%", "51%"];
 
-interface NameSkeletonProps {
-  count?: number;
-}
-
-const NameSkeleton: React.FC<NameSkeletonProps> = ({ count = 10 }) => {
+export default function NameSkeleton({ count = 12 }: { count?: number }) {
   return (
-    <div className="text-center font-semibold text-2xl animate-pulse">
-      {Array.from({ length: count }).map((_, index) => (
-        <div
-          key={index}
-          className={
-            index % 2 === 0
-              ? "p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-none"
-              : "p-3 border-b border-gray-200 dark:border-gray-600 last:border-none"
-          }
-        >
-          <div className="h-7 rounded-md w-3/4 mx-auto"></div>
-        </div>
+    <ul aria-hidden="true" className="grid gap-0">
+      {Array.from({ length: count }).map((_, i) => (
+        <li key={i} className="flex items-center px-4 py-3.5 sm:px-3">
+          <div
+            className="h-6 rounded-md bg-sunk motion-safe:animate-pulse"
+            style={{ width: WIDTHS[i % WIDTHS.length] }}
+          />
+        </li>
       ))}
-    </div>
+    </ul>
   );
-};
-
-export default NameSkeleton;
+}

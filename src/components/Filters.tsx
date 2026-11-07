@@ -1,241 +1,203 @@
-import React from "react";
-import DropdownList from "react-widgets/DropdownList";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Frequency,
+  Gender,
+  Query,
+  RACES,
+  Rank,
+  isLock,
+  lockedName,
+  raceLabel,
+} from "../lib/query";
+import BirthYearField from "./BirthYearField";
+import { FieldLabel, Pills, Segmented, inputClass } from "./ui";
 
-// Define types for the component props
 interface FiltersProps {
-  query: {
-    rank: "any" | "high" | "low";
-    frequency: "any" | "high" | "medium" | "low";
-    gender: "any" | "male" | "female";
-    year: number;
-    race: string;
-    racePercent: number;
-    fstartswith: string;
-    sstartswith: string;
-  };
-  onQueryChange: (newQuery: Partial<FiltersProps["query"]>) => void;
-  onClose: () => void;
+  query: Query;
+  onQueryChange: (changes: Partial<Query>) => void;
+  /** Prefix for element ids, so the sidebar and the sheet can coexist. */
+  idPrefix: string;
 }
 
-type YearOption = {
-  year: number;
-  display: string;
-};
+/** “Starts with” letters, debounced so typing doesn't fire a request per key. */
+function StartsWith({
+  id,
+  value,
+  onCommit,
+  placeholder,
+  kind,
+}: {
+  id: string;
+  value: string;
+  onCommit: (v: string) => void;
+  placeholder: string;
+  kind: "first names" | "surnames";
+}) {
+  const locked = lockedName(value);
+  const [text, setText] = useState(locked ? "" : value);
+  const timer = useRef<number | undefined>(undefined);
 
-const Filters: React.FC<FiltersProps> = ({ query, onQueryChange, onClose }) => {
-  // Helper functions
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { id, value } = e.target;
-    onQueryChange({
-      [id]: id === "year" ? parseInt(value) : value,
-    });
+  // Follow changes made elsewhere (Clear letters, URL, the other panel).
+  useEffect(() => {
+    if (!isLock(value)) setText((t) => (t === value ? t : value));
+  }, [value]);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const onInput = (v: string) => {
+    setText(v);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => onCommit(v.trim()), 250);
   };
 
-  const handleYearChange = (newYear: YearOption) => {
-    onQueryChange({ year: newYear.year });
-  };
+  return (
+    <>
+      <input
+        id={id}
+        type="search"
+        className={inputClass}
+        placeholder={locked ? "" : placeholder}
+        autoComplete="off"
+        disabled={!!locked}
+        value={locked ? "" : text}
+        onChange={(e) => onInput(e.target.value)}
+      />
+      {locked && (
+        <p className="text-[0.76rem] leading-snug text-muted">
+          Unlock <b className="font-semibold text-ink">{locked}</b> to filter{" "}
+          {kind} by letters.
+        </p>
+      )}
+    </>
+  );
+}
 
-  const handleRacePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onQueryChange({ racePercent: parseInt(e.target.value) });
-  };
+const Section = ({ title }: { title: string }) => (
+  <h3 className="-mb-1 font-display text-[1rem] font-semibold text-ink">
+    {title}
+  </h3>
+);
 
-  // Create years list
-  const yearsList: YearOption[] = [
-    ...Array.from({ length: 2025 - 1880 + 1 }, (_, i) => ({
-      year: 1880 + i,
-      display: (1880 + i).toString(),
-    })),
-    { year: 0, display: "Any" },
+const Group = ({ children }: { children: React.ReactNode }) => (
+  <div className="grid gap-1.5">{children}</div>
+);
+
+export default function Filters({ query, onQueryChange, idPrefix }: FiltersProps) {
+  const id = (s: string) => `${idPrefix}-${s}`;
+  const raceOptions = [
+    { value: "any", label: "Any" },
+    ...RACES.map((r) => ({ value: r.value as string, label: r.label })),
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 sm:sticky sm:top-4 p-4 pt-0 rounded-lg shadow">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold dark:text-white">Filters</h2>
-        <button
-          onClick={onClose}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 sm:hidden"
-          aria-label="Close filters"
-        >
-          <X size={24} className="text-gray-700 dark:text-white" />
-        </button>
-      </div>
+    <div className="grid gap-4">
+      <Section title="First name" />
+      <Group>
+        <FieldLabel>Gender</FieldLabel>
+        <Segmented<Gender>
+          label="Gender"
+          value={query.gender}
+          onChange={(gender) => onQueryChange({ gender })}
+          options={[
+            { value: "any", label: "Any" },
+            { value: "female", label: "Female" },
+            { value: "male", label: "Male" },
+          ]}
+        />
+      </Group>
+      <Group>
+        <FieldLabel>Popularity</FieldLabel>
+        <Segmented<Rank>
+          label="First name popularity"
+          value={query.rank}
+          onChange={(rank) => onQueryChange({ rank })}
+          options={[
+            { value: "any", label: "Any" },
+            { value: "high", label: "Common" },
+            { value: "low", label: "Rare" },
+          ]}
+        />
+      </Group>
+      <Group>
+        <FieldLabel htmlFor={id("year")}>Born in</FieldLabel>
+        <BirthYearField
+          id={id("year")}
+          year={query.year}
+          onChange={(year) => onQueryChange({ year })}
+        />
+      </Group>
+      <Group>
+        <FieldLabel htmlFor={id("fs")}>Starts with</FieldLabel>
+        <StartsWith
+          id={id("fs")}
+          value={query.fstartswith}
+          onCommit={(fstartswith) => onQueryChange({ fstartswith })}
+          placeholder="e.g. Jo"
+          kind="first names"
+        />
+      </Group>
 
-      <form>
-        <fieldset className="mb-4">
-          <legend className="font-medium dark:text-white">First Name:</legend>
+      <hr className="border-line" />
 
-          {/* Gender Select */}
-          <div className="mb-2">
-            <label
-              htmlFor="gender"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Gender
-            </label>
-            <select
-              id="gender"
-              value={query.gender}
-              onChange={handleChange}
-              className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="any">Any</option>
-              <option value="female">Female</option>
-              <option value="male">Male</option>
-            </select>
-          </div>
-
-          {/* Rank Select */}
-          <div className="mb-2">
-            <label
-              htmlFor="rank"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Popularity
-            </label>
-            <select
-              id="rank"
-              value={query.rank}
-              onChange={handleChange}
-              className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="any">Any</option>
-              <option value="high">High</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          {/* Year Dropdown */}
-          <div className="mb-2">
-            <label
-              htmlFor="year"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Year
-            </label>
-            <DropdownList
-              data={yearsList}
-              dataKey="year"
-              textField="display"
-              defaultValue={query.year}
-              onChange={handleYearChange}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              containerClassName="dark:bg-gray-700 dark:text-white"
-            />
-          </div>
-
-          {/* First Name Starts With */}
-          <div className="mb-2">
-            <label
-              htmlFor="fstartswith"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Starts With:
-            </label>
-            <input
-              type="search"
-              id="fstartswith"
-              value={query.fstartswith}
-              onChange={handleChange}
-              placeholder="Jo..."
-              autoComplete="off"
-              className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </fieldset>
-
-        {/* Last Name Fieldset */}
-        <fieldset>
-          <legend className="font-medium dark:text-white">Last Name:</legend>
-
-          {/* Race Selection */}
-          <div className="mb-2">
-            <label
-              htmlFor="race"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Race
-            </label>
-            <div className="space-y-2">
-              <select
-                id="race"
-                value={query.race}
-                onChange={handleChange}
-                className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="any">Any</option>
-                <option value="pctwhite">White</option>
-                <option value="pcthispanic">Hispanic</option>
-                <option value="pctasian">Asian</option>
-                <option value="pctblack">Black</option>
-                <option value="pctnative">Native</option>
-              </select>
-
-              {query.race !== "any" && (
-                <div>
-                  <label
-                    htmlFor="racePercent"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Minimum Race Percentile
-                  </label>
-                  <input
-                    type="number"
-                    id="racePercent"
-                    value={query.racePercent}
-                    onChange={handleRacePercentChange}
-                    min="0"
-                    max="99"
-                    className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
+      <Section title="Surname" />
+      <Group>
+        <FieldLabel>Frequency</FieldLabel>
+        <Segmented<Frequency>
+          label="Surname frequency"
+          value={query.frequency}
+          onChange={(frequency) => onQueryChange({ frequency })}
+          options={[
+            { value: "any", label: "Any" },
+            { value: "high", label: "Common" },
+            { value: "medium", label: "Medium" },
+            { value: "low", label: "Rare" },
+          ]}
+        />
+      </Group>
+      <Group>
+        <FieldLabel>Race / ethnicity</FieldLabel>
+        <Pills<string>
+          label="Surname race or ethnicity"
+          value={query.race}
+          onChange={(race) => onQueryChange({ race })}
+          options={raceOptions}
+        />
+        {query.race !== "any" && (
+          <div className="grid gap-1 pt-1">
+            <div className="flex justify-between gap-2 text-[0.82rem] text-muted">
+              <label htmlFor={id("pct")}>At least</label>
+              <output htmlFor={id("pct")} className="font-semibold text-ink tabular-nums">
+                {query.racePercent}% {raceLabel(query.race)}
+              </output>
             </div>
-          </div>
-
-          <div className="mb-2">
-            <label
-              htmlFor="frequency"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Popularity
-            </label>
-            <select
-              id="frequency"
-              value={query.frequency}
-              onChange={handleChange}
-              className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="any">Any</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-          <div className="mb-2">
-            <label
-              htmlFor="sstartswith"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Starts With:
-            </label>
             <input
-              type="search"
-              id="sstartswith"
-              value={query.sstartswith}
-              onChange={handleChange}
-              placeholder="Smi..."
-              autoComplete="off"
-              className="bg-white dark:bg-gray-700 dark:text-white mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              id={id("pct")}
+              type="range"
+              min={0}
+              max={99}
+              value={query.racePercent}
+              onChange={(e) =>
+                onQueryChange({ racePercent: parseInt(e.target.value, 10) })
+              }
+              className="w-full"
             />
+            <p className="text-[0.76rem] leading-snug text-muted">
+              Surnames where at least this share of people identify as{" "}
+              {raceLabel(query.race)}, from Census data.
+            </p>
           </div>
-        </fieldset>
-      </form>
+        )}
+      </Group>
+      <Group>
+        <FieldLabel htmlFor={id("ss")}>Starts with</FieldLabel>
+        <StartsWith
+          id={id("ss")}
+          value={query.sstartswith}
+          onCommit={(sstartswith) => onQueryChange({ sstartswith })}
+          placeholder="e.g. Mac"
+          kind="surnames"
+        />
+      </Group>
     </div>
   );
-};
-
-export default Filters;
+}
