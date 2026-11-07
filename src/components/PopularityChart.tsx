@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NameHistory } from "../types";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { API_URL, getJson } from "../lib/api";
 
 // History rarely changes, so keep it for the session.
 const cache = new Map<string, NameHistory[]>();
@@ -21,17 +21,12 @@ function useNameHistory(name: string, gender: "male" | "female") {
     }
     setState({ key, data: null, error: null });
     const controller = new AbortController();
-    fetch(
+    getJson<{ history?: NameHistory[] }>(
       `${API_URL}/api/firstnames/history?name=${encodeURIComponent(name)}&gender=${gender}`,
-      { signal: controller.signal },
+      controller.signal,
     )
-      .then(async (res) => {
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok)
-          throw new Error(body.errors?.[0]?.message || `The server returned ${res.status}.`);
-        const history: NameHistory[] = [...(body.history ?? [])].sort(
-          (a: NameHistory, b: NameHistory) => a.year - b.year,
-        );
+      .then((body) => {
+        const history = [...(body.history ?? [])].sort((a, b) => a.year - b.year);
         cache.set(key, history);
         setState({ key, data: history, error: null });
       })

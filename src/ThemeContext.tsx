@@ -1,19 +1,13 @@
 // ThemeContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
-
-type ThemeContextType = {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-};
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import React, { useEffect, useState } from "react";
+import { ThemeContext } from "./useTheme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     // First check if there's a saved preference
     const saved = localStorage.getItem("darkMode");
     if (saved !== null) {
-      return JSON.parse(saved);
+      return saved === "true";
     }
     // Only use system preference if no saved preference exists
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -44,7 +38,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleDarkMode = () => {
-    setIsDarkMode((prev: boolean) => !prev);
+    setIsDarkMode((prev) => !prev);
   };
 
   return (
@@ -52,12 +46,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
 }

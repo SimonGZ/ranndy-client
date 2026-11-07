@@ -14,7 +14,8 @@ import {
   summarize,
   toSearch,
 } from "./lib/query";
-import { useTheme } from "./ThemeContext";
+import { useTheme } from "./useTheme";
+import { API_URL, getJson } from "./lib/api";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import Filters from "./components/Filters";
 import FilterSheet from "./components/FilterSheet";
@@ -23,8 +24,6 @@ import NameRow from "./components/NameRow";
 import NameSkeleton from "./components/NameSkeleton";
 import { EmptyState, EndOfList, ErrorState } from "./components/States";
 import { LockChip, Wordmark } from "./components/ui";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 type Status = "loading" | "ready" | "error";
 interface NoMatch {
@@ -81,12 +80,8 @@ function App() {
     setError(null);
 
     try {
-      const res = await fetch(namesUrl(API_URL, q), { signal: controller.signal });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(body.errors?.[0]?.message || `The server returned ${res.status}.`);
-      }
-      const page: NamePair[] = body.names ?? [];
+      const body = await getJson<{ names?: NamePair[] }>(namesUrl(API_URL, q), controller.signal);
+      const page = body.names ?? [];
       // With no match, the API echoes the typed prefix back without an id.
       const valid = page.filter((p) => p[0]?.id && p[1]?.id);
 
@@ -115,7 +110,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fetchPage(query, true);
+    void fetchPage(query, true);
     setExpandedIndex(null);
     return () => abortRef.current?.abort();
   }, [query, fetchPage]);
@@ -230,13 +225,13 @@ function App() {
   const renderList = () => {
     if (status === "loading") return <NameSkeleton count={14} />;
     if (status === "error" && pairs.length === 0)
-      return <ErrorState detail={error ?? undefined} onRetry={() => fetchPage(query, true)} />;
+      return <ErrorState detail={error ?? undefined} onRetry={() => void fetchPage(query, true)} />;
     if (pairs.length === 0) return renderEmpty();
 
     return (
       <InfiniteScroll
         dataLength={pairs.length}
-        next={() => fetchPage(query, false)}
+        next={() => void fetchPage(query, false)}
         hasMore={hasMore}
         loader={<p className="py-4 text-center text-[0.85rem] text-muted">Loading more names…</p>}
         endMessage={status === "error" ? null : <EndOfList />}
@@ -255,7 +250,7 @@ function App() {
                 canHover={canHover}
                 onToggle={() => setExpandedIndex(expandedIndex === i ? null : i)}
                 onOpen={() => setSelected(pair)}
-                onCopy={() => copyName(name)}
+                onCopy={() => void copyName(name)}
                 onLockFirst={() => toggleLockFirst(name)}
                 onLockLast={() => toggleLockLast(name)}
               />
@@ -263,7 +258,7 @@ function App() {
           })}
         </ul>
         {status === "error" && (
-          <ErrorState compact detail={error ?? undefined} onRetry={() => fetchPage(query, false)} />
+          <ErrorState compact detail={error ?? undefined} onRetry={() => void fetchPage(query, false)} />
         )}
       </InfiniteScroll>
     );
@@ -345,7 +340,7 @@ function App() {
       <NameDrawer
         namePair={selected}
         onClose={() => setSelected(null)}
-        onCopy={() => selectedName && copyName(selectedName)}
+        onCopy={() => selectedName && void copyName(selectedName)}
         onLockFirst={() => selectedName && toggleLockFirst(selectedName)}
         onLockLast={() => selectedName && toggleLockLast(selectedName)}
         isFirstNameLocked={!!selectedName && query.fstartswith === lockValue(selectedName.first)}
