@@ -26,7 +26,9 @@ export default function BirthYearField({
   const [ageText, setAgeText] = useState(year ? String(THIS_YEAR - year) : "");
   const [message, setMessage] = useState<{ text: ReactNode; error?: boolean } | null>(null);
 
-  const storyYear = parseInt(storyText, 10) || THIS_YEAR;
+  // The last complete story year, so a half-typed "19" never counts as year 19.
+  const [storyYear, setStoryYear] = useState(THIS_YEAR);
+  const applied = year ? String(year) : "any year";
 
   // Follow changes made elsewhere (URL, back/forward, the other filter panel).
   useEffect(() => {
@@ -53,9 +55,13 @@ export default function BirthYearField({
       setAgeText("");
       return onChange(0);
     }
-    if (v.length < 4) return;
+    if (v.length < 4) {
+      return setMessage({ text: `Type all four digits. Still showing ${applied}.` });
+    }
     const y = parseInt(v, 10);
-    if (!inRange(y)) return setMessage({ text: RANGE_MSG, error: true });
+    if (!inRange(y)) {
+      return setMessage({ text: `${RANGE_MSG} Still showing ${applied}.`, error: true });
+    }
     setAgeText(String(storyYear - y));
     onChange(y);
   };
@@ -70,7 +76,7 @@ export default function BirthYearField({
     const born = inYear - age;
     if (!inRange(born)) {
       return setMessage({
-        text: `Age ${age} in ${inYear} means born ${born}. ${RANGE_MSG}`,
+        text: `Age ${age} in ${inYear} means born ${born}. ${RANGE_MSG} Still showing ${applied}.`,
         error: true,
       });
     }
@@ -96,7 +102,22 @@ export default function BirthYearField({
     setStoryText(v);
     if (v.length < 4) return;
     const inYear = parseInt(v, 10);
+    setStoryYear(inYear);
     if (ageText !== "") fromAge(ageText, inYear);
+  };
+
+  // Leaving a field with an incomplete or invalid value puts back what's applied.
+  const restore = () => {
+    setYearText(year ? String(year) : "");
+    setAgeText(year ? String(storyYear - year) : "");
+    setStoryText(String(storyYear));
+    setMessage(null);
+  };
+  const onBlur = () => {
+    const yearOk = yearText === (year ? String(year) : "");
+    const ageOk = ageText === (year ? String(storyYear - year) : "");
+    const storyOk = storyText === String(storyYear);
+    if (!yearOk || !ageOk || !storyOk) restore();
   };
 
   const step = (delta: number) => {
@@ -125,6 +146,7 @@ export default function BirthYearField({
           autoComplete="off"
           value={yearText}
           onChange={(e) => onYearInput(e.target.value)}
+          onBlur={onBlur}
         />
         <button type="button" className={stepClass} onClick={() => step(1)} aria-label="One year later">
           <Plus size={15} aria-hidden="true" />
@@ -139,6 +161,7 @@ export default function BirthYearField({
           autoComplete="off"
           value={ageText}
           onChange={(e) => onAgeInput(e.target.value)}
+          onBlur={onBlur}
         />
         <span>in</span>
         <input
@@ -148,6 +171,7 @@ export default function BirthYearField({
           autoComplete="off"
           value={storyText}
           onChange={(e) => onStoryInput(e.target.value)}
+          onBlur={onBlur}
         />
       </div>
       <p

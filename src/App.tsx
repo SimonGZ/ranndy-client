@@ -76,7 +76,13 @@ function App() {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-    if (initial) setStatus("loading");
+    if (initial) {
+      // Drop the old results now, so a failed request for new filters can
+      // never leave names from the previous filters on screen.
+      setPairs([]);
+      setNoMatch(null);
+      setStatus("loading");
+    }
     setError(null);
 
     try {
@@ -237,7 +243,7 @@ function App() {
         endMessage={status === "error" ? null : <EndOfList />}
         style={{ overflow: "visible" }}
       >
-        <ul className={canHover ? "grid gap-px p-2" : ""}>
+        <ul className={canHover ? "grid grid-cols-[minmax(0,1fr)] gap-px p-2" : ""}>
           {pairs.map((pair, i) => {
             const name = toName(pair);
             return (

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useId } from "react";
 import { Lock, X } from "lucide-react";
 
 export interface Option<T extends string> {
@@ -6,81 +6,85 @@ export interface Option<T extends string> {
   label: string;
 }
 
-/** A row of mutually exclusive buttons (behaves as a radio group). */
-export function Segmented<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
+interface RadioGroupProps<T extends string> {
   label: string;
   value: T;
   options: Option<T>[];
   onChange: (value: T) => void;
+}
+
+/**
+ * Native radio buttons styled as buttons. The browser provides one tab stop
+ * per group and arrow-key selection.
+ */
+function RadioGroup<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  className,
+  itemClass,
+}: RadioGroupProps<T> & {
+  className: string;
+  itemClass: (selected: boolean) => string;
 }) {
+  const name = useId();
   return (
-    <div
-      role="radiogroup"
-      aria-label={label}
-      className="grid auto-cols-fr grid-flow-col gap-0.5 rounded-lg bg-sunk p-[3px]"
-    >
+    <fieldset className={className}>
+      <legend className="sr-only">{label}</legend>
       {options.map((o) => {
         const selected = o.value === value;
         return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(o.value)}
-            className={`cursor-pointer rounded-md px-1 py-1.5 text-[0.8rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-accent ${
-              selected
-                ? "bg-surface text-ink shadow-sm dark:bg-line"
-                : "text-muted hover:text-ink"
-            }`}
-          >
-            {o.label}
-          </button>
+          <label key={o.value} className="relative flex cursor-pointer">
+            <input
+              type="radio"
+              name={name}
+              value={o.value}
+              checked={selected}
+              onChange={() => onChange(o.value)}
+              className="peer sr-only"
+            />
+            <span
+              className={`w-full text-center text-[0.8rem] font-medium transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-accent ${itemClass(selected)}`}
+            >
+              {o.label}
+            </span>
+          </label>
         );
       })}
-    </div>
+    </fieldset>
+  );
+}
+
+/** A row of mutually exclusive options. */
+export function Segmented<T extends string>(props: RadioGroupProps<T>) {
+  return (
+    <RadioGroup
+      {...props}
+      className="grid auto-cols-fr grid-flow-col gap-0.5 rounded-lg bg-sunk p-[3px]"
+      itemClass={(selected) =>
+        `rounded-md px-1 py-1.5 ${
+          selected ? "bg-surface text-ink shadow-sm dark:bg-line" : "text-muted hover:text-ink"
+        }`
+      }
+    />
   );
 }
 
 /** Like Segmented, but wraps onto several lines. */
-export function Pills<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: Option<T>[];
-  onChange: (value: T) => void;
-}) {
+export function Pills<T extends string>(props: RadioGroupProps<T>) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
-      {options.map((o) => {
-        const selected = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(o.value)}
-            className={`cursor-pointer rounded-full border px-3 py-1 text-[0.8rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-              selected
-                ? "border-accent bg-accent text-surface"
-                : "border-line bg-surface text-muted hover:text-ink"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
+    <RadioGroup
+      {...props}
+      className="flex flex-wrap gap-1.5"
+      itemClass={(selected) =>
+        `rounded-full border px-3 py-1 ${
+          selected
+            ? "border-accent bg-accent text-surface"
+            : "border-line bg-surface text-muted hover:text-ink"
+        }`
+      }
+    />
   );
 }
 

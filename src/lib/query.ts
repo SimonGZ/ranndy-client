@@ -130,6 +130,14 @@ export function summarize(q: Query): string {
     q.rank === "high" ? "Common" : q.rank === "low" ? "Rare" : null,
     q.year ? String(q.year) : null,
     prefixes(q),
+    // Surname frequency defaults to Common, so it only appears when changed.
+    q.frequency === "medium"
+      ? "Medium surnames"
+      : q.frequency === "low"
+        ? "Rare surnames"
+        : q.frequency === "any"
+          ? "Any surname"
+          : null,
     q.race !== "any" ? `≥${q.racePercent}% ${raceLabel(q.race)} surnames` : null,
   ]
     .filter(Boolean)

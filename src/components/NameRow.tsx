@@ -53,7 +53,7 @@ export default function NameRow({
         <div className="flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           <button type="button" className={iconBtn} onClick={onCopy} aria-label={`Copy ${full}`}>
             <Copy size={16} aria-hidden="true" />
-            Copy
+            <span className="hidden lg:inline">Copy</span>
           </button>
           <button
             type="button"
@@ -63,7 +63,7 @@ export default function NameRow({
             aria-label={`${lockedFirst ? "Unlock" : "Lock"} first name ${name.first}`}
           >
             <FirstIcon size={16} aria-hidden="true" />
-            First
+            <span className="hidden lg:inline">First</span>
           </button>
           <button
             type="button"
@@ -73,7 +73,7 @@ export default function NameRow({
             aria-label={`${lockedLast ? "Unlock" : "Lock"} surname ${name.last}`}
           >
             <LastIcon size={16} aria-hidden="true" />
-            Last
+            <span className="hidden lg:inline">Last</span>
           </button>
         </div>
       </li>
