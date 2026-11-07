@@ -44,7 +44,7 @@ const Filters: React.FC<FiltersProps> = ({ query, onQueryChange, onClose }) => {
 
   // Create years list
   const yearsList: YearOption[] = [
-    ...Array.from({ length: 145 }, (_, i) => ({
+    ...Array.from({ length: 2025 - 1880 + 1 }, (_, i) => ({
       year: 1880 + i,
       display: (1880 + i).toString(),
     })),
