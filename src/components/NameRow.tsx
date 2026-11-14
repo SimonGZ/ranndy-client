@@ -36,17 +36,17 @@ export default function NameRow({
   const LockIcon = (on: boolean) => (on ? LockOpen : Lock);
   const iconBtn =
     "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md px-2 text-[0.78rem] font-medium text-muted hover:bg-sunk hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
+  const actionBtn =
+    "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.82rem] font-medium focus-visible:outline-2 focus-visible:outline-accent";
+  const off = "border-line bg-surface text-ink";
+  const on = "border-transparent bg-mark text-mark-ink";
   const detailsButton = (
     <button
       type="button"
       onClick={onOpen}
       aria-label={`Details for ${full}`}
       aria-haspopup="dialog"
-      className={
-        inlineActions
-          ? iconBtn
-          : "inline-flex min-h-8 shrink-0 cursor-pointer items-center rounded-lg border border-line bg-surface px-2.5 text-[0.82rem] font-medium text-accent hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent"
-      }
+      className={inlineActions ? iconBtn : `${actionBtn} ${off}`}
     >
       Details
     </button>
@@ -97,14 +97,9 @@ export default function NameRow({
     );
   }
 
-  const actionBtn =
-    "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.82rem] font-medium focus-visible:outline-2 focus-visible:outline-accent";
-  const off = "border-line bg-surface text-ink";
-  const on = "border-transparent bg-mark text-mark-ink";
-
   return (
     <li className={`border-b border-line last:border-b-0 ${expanded ? "bg-surface" : ""}`}>
-      <div className="flex items-center pr-3">
+      <div className="flex items-center">
         <button
           type="button"
           onClick={onOpen}
@@ -119,11 +114,10 @@ export default function NameRow({
           onClick={onToggle}
           aria-label={`Actions for ${full}`}
           aria-expanded={expanded}
-          className="grid h-11 w-10 shrink-0 cursor-pointer place-items-center text-muted hover:text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="grid h-11 w-12 shrink-0 cursor-pointer place-items-center text-muted hover:text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <ChevronDown size={16} className={`shrink-0 text-muted ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
-        {detailsButton}
       </div>
       {expanded && (
         <div className="flex flex-wrap gap-1.5 px-3.5 pb-3">
@@ -149,6 +143,7 @@ export default function NameRow({
             <Lock size={14} aria-hidden="true" />
             {lockedLast ? "Unlock last" : "Lock last"}
           </button>
+          {detailsButton}
         </div>
       )}
     </li>
