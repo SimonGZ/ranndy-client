@@ -61,10 +61,12 @@ export function Segmented<T extends string>(props: RadioGroupProps<T>) {
   return (
     <RadioGroup
       {...props}
-      className="grid auto-cols-fr grid-flow-col gap-0.5 rounded-lg bg-sunk p-[3px]"
+      className="grid auto-cols-fr grid-flow-col gap-0.5 rounded-lg bg-sunk p-[3px] dark:bg-(--filter-track) dark:inset-ring dark:inset-ring-(--filter-track-border)"
       itemClass={(selected) =>
         `rounded-md px-1 py-1.5 ${
-          selected ? "bg-surface text-ink shadow-sm dark:bg-line" : "text-muted hover:text-ink"
+          selected
+            ? "bg-surface text-ink shadow-sm dark:bg-(--filter-selected) dark:inset-ring dark:inset-ring-(--filter-selected-border)"
+            : "text-muted hover:text-ink"
         }`
       }
     />
@@ -80,8 +82,8 @@ export function Pills<T extends string>(props: RadioGroupProps<T>) {
       itemClass={(selected) =>
         `rounded-full border px-3 py-1 ${
           selected
-            ? "border-accent bg-accent text-surface"
-            : "border-line bg-surface text-muted hover:text-ink"
+            ? "border-accent bg-accent text-surface dark:border-(--filter-selected-border) dark:bg-(--filter-selected) dark:text-ink"
+            : "border-line bg-surface text-muted hover:text-ink dark:border-(--filter-track-border) dark:bg-(--filter-field)"
         }`
       }
     />
@@ -143,5 +145,8 @@ export function Wordmark({ className = "" }: { className?: string }) {
   );
 }
 
+export const filterFieldClass =
+  "rounded-lg border border-line bg-surface text-ink dark:enabled:border-(--filter-border) dark:enabled:bg-(--filter-field)";
+
 export const inputClass =
-  "w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[0.9rem] text-ink placeholder:text-muted/70 focus:outline-2 focus:outline-accent disabled:cursor-not-allowed disabled:bg-sunk disabled:text-muted";
+  `${filterFieldClass} w-full px-2.5 py-1.5 text-[0.9rem] placeholder:text-muted/70 focus:outline-2 focus:outline-accent disabled:cursor-not-allowed disabled:bg-sunk disabled:text-muted dark:placeholder:text-muted`;

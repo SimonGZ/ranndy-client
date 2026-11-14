@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { MAX_YEAR, MIN_YEAR } from "../lib/query";
-import { inputClass } from "./ui";
+import { filterFieldClass, inputClass } from "./ui";
 
 const THIS_YEAR = new Date().getFullYear();
 const RANGE_MSG = `Ranndy has names from ${MIN_YEAR} to ${MAX_YEAR}.`;
@@ -136,7 +136,7 @@ export default function BirthYearField({
   };
 
   const stepClass =
-    "grid cursor-pointer place-items-center rounded-lg border border-line bg-surface text-ink hover:bg-sunk focus-visible:outline-2 focus-visible:outline-accent";
+    `${filterFieldClass} grid cursor-pointer place-items-center hover:bg-sunk focus-visible:outline-2 focus-visible:outline-accent dark:enabled:hover:bg-(--filter-selected)`;
   const smallInput = `${inputClass} w-0 flex-1 px-1 text-center tabular-nums`;
 
   return (

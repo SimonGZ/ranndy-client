@@ -56,12 +56,12 @@ export default function NameRow({
     const FirstIcon = LockIcon(lockedFirst);
     const LastIcon = LockIcon(lockedLast);
     return (
-      <li className="group flex min-w-0 items-center gap-2 rounded-lg px-3 hover:bg-paper focus-within:bg-paper">
+      <li className="group flex min-w-0 items-center gap-2 rounded-lg px-3 odd:bg-row-stripe hover:bg-accent-soft focus-within:bg-accent-soft">
         <button
           type="button"
           onClick={onOpen}
           aria-haspopup="dialog"
-          className="min-w-0 flex-1 cursor-pointer break-words py-2 text-left font-display text-2xl leading-snug focus-visible:outline-none"
+          className="min-w-0 flex-1 cursor-pointer break-words py-2 text-left font-display text-2xl leading-snug font-semibold focus-visible:outline-none"
         >
           <Part text={name.first} locked={lockedFirst} />{" "}
           <Part text={name.last} locked={lockedLast} />
@@ -98,13 +98,13 @@ export default function NameRow({
   }
 
   return (
-    <li className={`border-b border-line last:border-b-0 ${expanded ? "bg-surface" : ""}`}>
+    <li className={`border-b border-line last:border-b-0 ${expanded ? "bg-surface" : "md:odd:bg-row-stripe"}`}>
       <div className="flex items-center">
         <button
           type="button"
           onClick={onOpen}
           aria-haspopup="dialog"
-          className="min-w-0 flex-1 cursor-pointer break-words py-2.5 pl-4 text-left font-display text-[1.35rem] leading-snug focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="min-w-0 flex-1 cursor-pointer break-words py-2.5 pl-4 text-left font-display text-[1.35rem] leading-snug font-semibold focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <Part text={name.first} locked={lockedFirst} />{" "}
           <Part text={name.last} locked={lockedLast} />

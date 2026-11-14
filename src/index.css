@@ -13,6 +13,7 @@
   --color-paper: #f5f6f9; /* page background */
   --color-surface: #ffffff; /* cards, drawer, sheets */
   --color-sunk: #eef0f5; /* inset controls */
+  --color-row-stripe: #f5f6f9;
   --color-ink: #1b1f2e;
   --color-muted: #5b6176;
   --color-line: #dfe2eb;
@@ -28,6 +29,7 @@
   --color-paper: #11131a;
   --color-surface: #1a1d27;
   --color-sunk: #151821;
+  --color-row-stripe: #202530;
   --color-ink: #e8eaf1;
   --color-muted: #9ba1b5;
   --color-line: #2b2f3e;
@@ -37,6 +39,12 @@
   --color-mark-ink: #ffe9a0;
   --color-lock-line: #c99a1e;
   --color-danger: #ff7d93;
+  --filter-field: #272d3a;
+  --filter-border: #66738b;
+  --filter-track: #222733;
+  --filter-track-border: #465067;
+  --filter-selected: #323d56;
+  --filter-selected-border: #6c7fa8;
   color-scheme: dark;
 }
 
