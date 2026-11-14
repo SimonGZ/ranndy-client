@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NameHistory } from "../types";
 
 import { API_URL, getJson } from "../lib/api";
@@ -56,7 +56,6 @@ export default function PopularityChart({
   const { data, error } = useNameHistory(firstName, gender);
   const [expanded, setExpanded] = useState(false);
   const [hoverYear, setHoverYear] = useState<number | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
 
   const geometry = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -64,8 +63,8 @@ export default function PopularityChart({
     const last = data[data.length - 1].year;
     const decades = data.filter((d) => d.year % 10 === 0);
     const points = expanded || decades.length < 3 ? data : decades;
-    const H = expanded ? 200 : 100;
-    const padT = expanded ? 28 : 10;
+    const H = expanded ? 200 : 118;
+    const padT = 28;
     const ranks = data.map((d) => d.rank);
     const lo = Math.log(Math.max(1, Math.min(...ranks) * 0.8));
     const hi = Math.log(Math.max(...ranks) * 1.25);
@@ -109,11 +108,17 @@ export default function PopularityChart({
   const area = `${x(points[0].year)},${H - PAD_B} ${line} ${x(points[points.length - 1].year)},${H - PAD_B}`;
 
   const onPointer = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (!expanded || !svgRef.current) return;
-    const r = svgRef.current.getBoundingClientRect();
+    const r = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - r.left) / r.width) * W;
-    const year = Math.round(first + ((px - PAD_L) / (W - PAD_L - PAD_R)) * (last - first));
-    setHoverYear(Math.max(first, Math.min(last, year)));
+    const year = first + ((px - PAD_L) / (W - PAD_L - PAD_R)) * (last - first);
+    if (expanded) {
+      setHoverYear(Math.max(first, Math.min(last, Math.round(year))));
+    } else {
+      const nearest = points.reduce((closest, point) =>
+        Math.abs(point.year - year) < Math.abs(closest.year - year) ? point : closest,
+      );
+      setHoverYear(nearest.year);
+    }
   };
 
   return (
@@ -135,14 +140,16 @@ export default function PopularityChart({
         </button>
       </div>
       <svg
-        ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        className={`block h-auto w-full touch-pan-y ${expanded ? "cursor-crosshair" : ""}`}
+        className="block h-auto w-full touch-pan-y cursor-crosshair"
         role="img"
         aria-label={`${firstName} peaked at #${peak.rank} in ${peak.year}; #${latest.rank} in ${latest.year}.`}
         onPointerMove={onPointer}
         onPointerDown={onPointer}
-        onPointerLeave={() => setHoverYear(null)}
+        onPointerLeave={(e) => {
+          if (e.pointerType !== "touch") setHoverYear(null);
+        }}
+        onPointerCancel={() => setHoverYear(null)}
       >
         {gridRanks.map((r) => (
           <g key={r}>
@@ -196,7 +203,7 @@ export default function PopularityChart({
             )}
           </>
         )}
-        {expanded ? (
+        {expanded || hoverYear !== null ? (
           <>
             <line
               x1={x(readoutYear)}
