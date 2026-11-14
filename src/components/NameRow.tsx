@@ -34,13 +34,19 @@ export default function NameRow({
 }: NameRowProps) {
   const full = `${name.first} ${name.last}`;
   const LockIcon = (on: boolean) => (on ? LockOpen : Lock);
+  const iconBtn =
+    "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md px-2 text-[0.78rem] font-medium text-muted hover:bg-sunk hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
   const detailsButton = (
     <button
       type="button"
       onClick={onOpen}
       aria-label={`Details for ${full}`}
       aria-haspopup="dialog"
-      className="inline-flex min-h-8 shrink-0 cursor-pointer items-center rounded-lg border border-line bg-surface px-2.5 text-[0.82rem] font-medium text-accent hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent"
+      className={
+        inlineActions
+          ? iconBtn
+          : "inline-flex min-h-8 shrink-0 cursor-pointer items-center rounded-lg border border-line bg-surface px-2.5 text-[0.82rem] font-medium text-accent hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent"
+      }
     >
       Details
     </button>
@@ -49,8 +55,6 @@ export default function NameRow({
   if (inlineActions) {
     const FirstIcon = LockIcon(lockedFirst);
     const LastIcon = LockIcon(lockedLast);
-    const iconBtn =
-      "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md px-2 text-[0.78rem] font-medium text-muted hover:bg-sunk hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
     return (
       <li className="group flex min-w-0 items-center gap-2 rounded-lg px-3 hover:bg-paper focus-within:bg-paper">
         <button
@@ -87,8 +91,8 @@ export default function NameRow({
             <LastIcon size={16} aria-hidden="true" />
             <span className="hidden lg:inline">Last</span>
           </button>
+          {detailsButton}
         </div>
-        {detailsButton}
       </li>
     );
   }
