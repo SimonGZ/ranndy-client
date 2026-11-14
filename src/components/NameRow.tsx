@@ -34,6 +34,17 @@ export default function NameRow({
 }: NameRowProps) {
   const full = `${name.first} ${name.last}`;
   const LockIcon = (on: boolean) => (on ? LockOpen : Lock);
+  const detailsButton = (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`Details for ${full}`}
+      aria-haspopup="dialog"
+      className="inline-flex min-h-8 shrink-0 cursor-pointer items-center rounded-lg border border-line bg-surface px-2.5 text-[0.82rem] font-medium text-accent hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      Details
+    </button>
+  );
 
   if (inlineActions) {
     const FirstIcon = LockIcon(lockedFirst);
@@ -45,7 +56,8 @@ export default function NameRow({
         <button
           type="button"
           onClick={onOpen}
-          className="min-w-0 flex-1 cursor-pointer truncate py-2 text-left font-display text-2xl leading-snug focus-visible:outline-none"
+          aria-haspopup="dialog"
+          className="min-w-0 flex-1 cursor-pointer break-words py-2 text-left font-display text-2xl leading-snug focus-visible:outline-none"
         >
           <Part text={name.first} locked={lockedFirst} />{" "}
           <Part text={name.last} locked={lockedLast} />
@@ -76,6 +88,7 @@ export default function NameRow({
             <span className="hidden lg:inline">Last</span>
           </button>
         </div>
+        {detailsButton}
       </li>
     );
   }
@@ -87,10 +100,11 @@ export default function NameRow({
 
   return (
     <li className={`border-b border-line last:border-b-0 ${expanded ? "bg-surface" : ""}`}>
-      <div className="flex items-center">
+      <div className="flex items-center pr-3">
         <button
           type="button"
           onClick={onOpen}
+          aria-haspopup="dialog"
           className="min-w-0 flex-1 cursor-pointer break-words py-2.5 pl-4 text-left font-display text-[1.35rem] leading-snug focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <Part text={name.first} locked={lockedFirst} />{" "}
@@ -101,10 +115,11 @@ export default function NameRow({
           onClick={onToggle}
           aria-label={`Actions for ${full}`}
           aria-expanded={expanded}
-          className="grid h-11 w-12 shrink-0 cursor-pointer place-items-center text-muted hover:text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="grid h-11 w-10 shrink-0 cursor-pointer place-items-center text-muted hover:text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <ChevronDown size={16} className={`shrink-0 text-muted ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
+        {detailsButton}
       </div>
       {expanded && (
         <div className="flex flex-wrap gap-1.5 px-3.5 pb-3">
