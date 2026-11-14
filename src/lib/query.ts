@@ -28,6 +28,8 @@ export const DEFAULT_QUERY: Query = {
 
 export const MIN_YEAR = 1880;
 export const MAX_YEAR = 2025;
+export const MIN_RACE_PERCENT = 1;
+export const MAX_RACE_PERCENT = 99;
 
 export const RACES = [
   { value: "pctwhite", label: "White" },
@@ -66,7 +68,8 @@ export function parseQuery(search: string): Query {
   if (race && RACES.some((r) => r.value === race)) q.race = race;
 
   const pct = parseInt(p.get("rp") ?? "", 10);
-  if (!isNaN(pct) && pct >= 0 && pct <= 99) q.racePercent = pct;
+  if (pct === 0) q.racePercent = MIN_RACE_PERCENT; // Links made with the old slider.
+  if (pct >= MIN_RACE_PERCENT && pct <= MAX_RACE_PERCENT) q.racePercent = pct;
 
   q.fstartswith = p.get("fs") ?? "";
   q.sstartswith = p.get("ss") ?? "";
@@ -138,7 +141,7 @@ export function summarize(q: Query): string {
         : q.frequency === "any"
           ? "Any surname"
           : null,
-    q.race !== "any" ? `≥${q.racePercent}% ${raceLabel(q.race)} surnames` : null,
+    q.race !== "any" ? `>${q.racePercent}% ${raceLabel(q.race)} surnames` : null,
   ]
     .filter(Boolean)
     .join(" · ");

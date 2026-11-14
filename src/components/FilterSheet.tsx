@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Query } from "../lib/query";
 import Filters from "./Filters";
 
-/** Phones: the filters as a bottom sheet over the list. */
+/** Filters as a bottom sheet for narrow layouts. */
 export default function FilterSheet({
   open,
   onClose,
@@ -13,7 +13,7 @@ export default function FilterSheet({
   open: boolean;
   onClose: () => void;
   query: Query;
-  onQueryChange: (changes: Partial<Query>) => void;
+  onQueryChange: (changes: Partial<Query>, debounceFetch?: boolean) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 

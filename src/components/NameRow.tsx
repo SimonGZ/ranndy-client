@@ -1,14 +1,14 @@
-import { Copy, Lock, LockOpen } from "lucide-react";
+import { ChevronDown, Copy, Lock, LockOpen } from "lucide-react";
 import { Name } from "../types";
 
 interface NameRowProps {
   name: Name;
   lockedFirst: boolean;
   lockedLast: boolean;
-  /** Touch screens: this row has been tapped and shows its actions. */
+  /** Compact layouts and touch screens: this row shows its actions underneath. */
   expanded: boolean;
-  /** Mouse/trackpad: actions appear on hover and a click opens details. */
-  canHover: boolean;
+  /** Wide mouse/trackpad layouts: actions appear inline on hover. */
+  inlineActions: boolean;
   onToggle: () => void;
   onOpen: () => void;
   onCopy: () => void;
@@ -25,7 +25,7 @@ export default function NameRow({
   lockedFirst,
   lockedLast,
   expanded,
-  canHover,
+  inlineActions,
   onToggle,
   onOpen,
   onCopy,
@@ -35,13 +35,13 @@ export default function NameRow({
   const full = `${name.first} ${name.last}`;
   const LockIcon = (on: boolean) => (on ? LockOpen : Lock);
 
-  if (canHover) {
+  if (inlineActions) {
     const FirstIcon = LockIcon(lockedFirst);
     const LastIcon = LockIcon(lockedLast);
     const iconBtn =
       "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md px-2 text-[0.78rem] font-medium text-muted hover:bg-sunk hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
     return (
-      <li className="group flex items-center gap-2 rounded-lg px-3 hover:bg-paper focus-within:bg-paper">
+      <li className="group flex min-w-0 items-center gap-2 rounded-lg px-3 hover:bg-paper focus-within:bg-paper">
         <button
           type="button"
           onClick={onOpen}
@@ -90,22 +90,21 @@ export default function NameRow({
       <div className="flex items-center">
         <button
           type="button"
-          onClick={onToggle}
-          aria-expanded={expanded}
-          className="min-w-0 flex-1 truncate px-4 py-2.5 text-left font-display text-[1.35rem] leading-snug focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          onClick={onOpen}
+          className="min-w-0 flex-1 cursor-pointer break-words py-2.5 pl-4 text-left font-display text-[1.35rem] leading-snug focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <Part text={name.first} locked={lockedFirst} />{" "}
           <Part text={name.last} locked={lockedLast} />
         </button>
-        {expanded && (
-          <button
-            type="button"
-            onClick={onOpen}
-            className="shrink-0 cursor-pointer py-2 pr-4 pl-1 text-[0.82rem] font-medium text-accent"
-          >
-            Details ›
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={`Actions for ${full}`}
+          aria-expanded={expanded}
+          className="grid h-11 w-12 shrink-0 cursor-pointer place-items-center text-muted hover:text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+        >
+          <ChevronDown size={16} className={`shrink-0 text-muted ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+        </button>
       </div>
       {expanded && (
         <div className="flex flex-wrap gap-1.5 px-3.5 pb-3">

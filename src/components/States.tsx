@@ -44,9 +44,7 @@ export function ErrorState({
         Couldn’t load {compact ? "more " : ""}names
       </h2>
       <p className="max-w-prose text-[0.92rem] text-muted">
-        Ranndy didn’t respond. Check your connection and try again; your filters
-        are kept.
-        {detail && <span className="mt-1 block text-[0.8rem]">Details: {detail}</span>}
+        {detail ?? "Check your connection and try again."}
       </p>
       <button type="button" className={`${buttonClass} mt-1`} onClick={onRetry}>
         <RotateCcw size={14} aria-hidden="true" />

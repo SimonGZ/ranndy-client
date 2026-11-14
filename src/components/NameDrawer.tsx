@@ -7,7 +7,7 @@ import SurnameBars from "./SurnameBars";
 interface NameDrawerProps {
   namePair: NamePair | null;
   onClose: () => void;
-  onCopy: () => void;
+  onCopy: (name: string) => Promise<void>;
   onLockFirst: () => void;
   onLockLast: () => void;
   isFirstNameLocked: boolean;
@@ -17,6 +17,49 @@ interface NameDrawerProps {
 
 const searchUrl = (kind: "first name" | "surname", name: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(`${kind} meaning ${name}`)}`;
+
+function CopyNameButton({ onCopy }: { onCopy: () => Promise<void> }) {
+  const [status, setStatus] = useState<"idle" | "pending" | "copied" | "error">("idle");
+
+  useEffect(() => {
+    if (status !== "copied") return;
+    const timer = window.setTimeout(() => setStatus("idle"), 1500);
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
+  const copy = async () => {
+    if (status === "pending") return;
+    setStatus("pending");
+    try {
+      await onCopy();
+      setStatus("copied");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void copy()}
+        aria-disabled={status === "pending"}
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-[0.85rem] font-semibold text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        {status === "copied" ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+        {status === "copied" ? "Copied" : "Copy name"}
+      </button>
+      <span role="status" className="sr-only">
+        {status === "copied" && "Name copied."}
+      </span>
+      {status === "error" && (
+        <p role="alert" className="order-last basis-full text-[0.85rem] text-danger">
+          Couldn’t copy. Select the name and copy it instead.
+        </p>
+      )}
+    </>
+  );
+}
 
 export default function NameDrawer({
   namePair,
@@ -30,13 +73,6 @@ export default function NameDrawer({
 }: NameDrawerProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const open = !!namePair;
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const t = window.setTimeout(() => setCopied(false), 1500);
-    return () => window.clearTimeout(t);
-  }, [copied]);
 
   useEffect(() => {
     const d = ref.current;
@@ -89,17 +125,10 @@ export default function NameDrawer({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                onCopy();
-                setCopied(true);
-              }}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-[0.85rem] font-semibold text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
-              {copied ? "Copied" : "Copy name"}
-            </button>
+            <CopyNameButton
+              key={`${first.id}-${last.id}`}
+              onCopy={() => onCopy(`${first.name} ${last.name}`)}
+            />
             <button
               type="button"
               onClick={onLockFirst}

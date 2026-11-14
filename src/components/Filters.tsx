@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Frequency,
   Gender,
+  MAX_RACE_PERCENT,
+  MIN_RACE_PERCENT,
   Query,
   RACES,
   Rank,
@@ -14,41 +16,30 @@ import { FieldLabel, Pills, Segmented, inputClass } from "./ui";
 
 interface FiltersProps {
   query: Query;
-  onQueryChange: (changes: Partial<Query>) => void;
+  onQueryChange: (changes: Partial<Query>, debounceFetch?: boolean) => void;
   /** Prefix for element ids, so the sidebar and the sheet can coexist. */
   idPrefix: string;
 }
 
-/** “Starts with” letters, debounced so typing doesn't fire a request per key. */
+/** The app debounces fetching so edits survive closing the filter sheet. */
 function StartsWith({
   id,
   value,
-  onCommit,
+  onChange,
   placeholder,
   kind,
 }: {
   id: string;
   value: string;
-  onCommit: (v: string) => void;
+  onChange: (v: string) => void;
   placeholder: string;
   kind: "first names" | "surnames";
 }) {
   const locked = lockedName(value);
   const [text, setText] = useState(locked ? "" : value);
-  const timer = useRef<number | undefined>(undefined);
-
-  // Follow changes made elsewhere (Clear letters, URL, the other panel).
   useEffect(() => {
-    if (!isLock(value)) setText((t) => (t === value ? t : value));
+    if (!isLock(value)) setText((t) => (t.trim() === value ? t : value));
   }, [value]);
-
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  const onInput = (v: string) => {
-    setText(v);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => onCommit(v.trim()), 250);
-  };
 
   return (
     <>
@@ -60,7 +51,11 @@ function StartsWith({
         autoComplete="off"
         disabled={!!locked}
         value={locked ? "" : text}
-        onChange={(e) => onInput(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          const next = e.target.value.trim();
+          if (next !== value) onChange(next);
+        }}
       />
       {locked && (
         <p className="text-[0.76rem] leading-snug text-muted">
@@ -131,7 +126,7 @@ export default function Filters({ query, onQueryChange, idPrefix }: FiltersProps
         <StartsWith
           id={id("fs")}
           value={query.fstartswith}
-          onCommit={(fstartswith) => onQueryChange({ fstartswith })}
+          onChange={(fstartswith) => onQueryChange({ fstartswith }, true)}
           placeholder="e.g. Jo"
           kind="first names"
         />
@@ -165,7 +160,7 @@ export default function Filters({ query, onQueryChange, idPrefix }: FiltersProps
         {query.race !== "any" && (
           <div className="grid gap-1 pt-1">
             <div className="flex justify-between gap-2 text-[0.82rem] text-muted">
-              <label htmlFor={id("pct")}>At least</label>
+              <label htmlFor={id("pct")}>More than</label>
               <output htmlFor={id("pct")} className="font-semibold text-ink tabular-nums">
                 {query.racePercent}% {raceLabel(query.race)}
               </output>
@@ -173,18 +168,14 @@ export default function Filters({ query, onQueryChange, idPrefix }: FiltersProps
             <input
               id={id("pct")}
               type="range"
-              min={0}
-              max={99}
+              min={MIN_RACE_PERCENT}
+              max={MAX_RACE_PERCENT}
               value={query.racePercent}
               onChange={(e) =>
                 onQueryChange({ racePercent: parseInt(e.target.value, 10) })
               }
               className="w-full"
             />
-            <p className="text-[0.76rem] leading-snug text-muted">
-              Surnames where at least this share of people identify as{" "}
-              {raceLabel(query.race)}, from Census data.
-            </p>
           </div>
         )}
       </Group>
@@ -193,7 +184,7 @@ export default function Filters({ query, onQueryChange, idPrefix }: FiltersProps
         <StartsWith
           id={id("ss")}
           value={query.sstartswith}
-          onCommit={(sstartswith) => onQueryChange({ sstartswith })}
+          onChange={(sstartswith) => onQueryChange({ sstartswith }, true)}
           placeholder="e.g. Mac"
           kind="surnames"
         />

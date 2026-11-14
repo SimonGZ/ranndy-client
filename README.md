@@ -15,7 +15,6 @@ A modern, responsive React client for [Ranndy.com](https://ranndy.com), a random
 *   **Interactive Name Details:** Click on a name to view detailed statistics, including:
     *   Historical popularity charts
     *   Racial distribution charts
-*   **Favorites:** Save your favorite names for later. Your favorites are stored locally in your browser.
 *   **Dark Mode:** Switch between light and dark themes for comfortable viewing.
 *   **Responsive Design:** The interface is designed to work on both desktop and mobile devices.
 *   **URL-based State:** Filters are stored in the URL, so you can share your specific queries.
@@ -26,5 +25,5 @@ A modern, responsive React client for [Ranndy.com](https://ranndy.com), a random
 *   **Build Tool:** [Vite](https://vitejs.dev/)
 *   **Language:** [TypeScript](https://www.typescriptlang.org/)
 *   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-*   **Charting:** [Chart.js](https://www.chartjs.org/) with [react-chartjs-2](https://react-chartjs-2.js.org/)
+*   **Charts:** SVG popularity history and surname breakdown bars
 *   **Icons:** [Lucide React](https://lucide.dev/guide/packages/lucide-react)

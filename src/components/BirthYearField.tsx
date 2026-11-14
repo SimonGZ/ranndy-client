@@ -7,6 +7,8 @@ const THIS_YEAR = new Date().getFullYear();
 const RANGE_MSG = `Ranndy has names from ${MIN_YEAR} to ${MAX_YEAR}.`;
 const inRange = (y: number) => y >= MIN_YEAR && y <= MAX_YEAR;
 const digits = (s: string) => s.replace(/\D/g, "");
+const ageInStory = (birthYear: number, storyYear: number) =>
+  birthYear && storyYear >= birthYear ? String(storyYear - birthYear) : "";
 
 /**
  * Birth year, typed directly or worked out from an age and the year the
@@ -23,7 +25,7 @@ export default function BirthYearField({
 }) {
   const [yearText, setYearText] = useState(year ? String(year) : "");
   const [storyText, setStoryText] = useState(String(THIS_YEAR));
-  const [ageText, setAgeText] = useState(year ? String(THIS_YEAR - year) : "");
+  const [ageText, setAgeText] = useState(() => ageInStory(year, THIS_YEAR));
   const [message, setMessage] = useState<{ text: ReactNode; error?: boolean } | null>(null);
 
   // The last complete story year, so a half-typed "19" never counts as year 19.
@@ -35,7 +37,7 @@ export default function BirthYearField({
     const shown = parseInt(yearText, 10) || 0;
     if (shown !== year) {
       setYearText(year ? String(year) : "");
-      setAgeText(year ? String(storyYear - year) : "");
+      setAgeText(ageInStory(year, storyYear));
       setMessage(null);
     }
     // Only react to the year prop; local edits are handled below.
@@ -62,7 +64,7 @@ export default function BirthYearField({
     if (!inRange(y)) {
       return setMessage({ text: `${RANGE_MSG} Still showing ${applied}.`, error: true });
     }
-    setAgeText(String(storyYear - y));
+    setAgeText(ageInStory(y, storyYear));
     onChange(y);
   };
 
@@ -70,15 +72,17 @@ export default function BirthYearField({
     if (ageRaw === "") {
       setMessage(null);
       setYearText("");
-      return onChange(0);
+      onChange(0);
+      return true;
     }
     const age = parseInt(ageRaw, 10);
     const born = inYear - age;
     if (!inRange(born)) {
-      return setMessage({
+      setMessage({
         text: `Age ${age} in ${inYear} means born ${born}. ${RANGE_MSG} Still showing ${applied}.`,
         error: true,
       });
+      return false;
     }
     setMessage({
       text: (
@@ -89,6 +93,7 @@ export default function BirthYearField({
       ),
     });
     commit(born);
+    return true;
   };
 
   const onAgeInput = (raw: string) => {
@@ -102,20 +107,22 @@ export default function BirthYearField({
     setStoryText(v);
     if (v.length < 4) return;
     const inYear = parseInt(v, 10);
+    if (inYear === 0) return;
+    if (ageText !== "" && !fromAge(ageText, inYear)) return;
     setStoryYear(inYear);
-    if (ageText !== "") fromAge(ageText, inYear);
+    if (ageText === "") setAgeText(ageInStory(year, inYear));
   };
 
   // Leaving a field with an incomplete or invalid value puts back what's applied.
   const restore = () => {
     setYearText(year ? String(year) : "");
-    setAgeText(year ? String(storyYear - year) : "");
+    setAgeText(ageInStory(year, storyYear));
     setStoryText(String(storyYear));
     setMessage(null);
   };
   const onBlur = () => {
     const yearOk = yearText === (year ? String(year) : "");
-    const ageOk = ageText === (year ? String(storyYear - year) : "");
+    const ageOk = ageText === ageInStory(year, storyYear);
     const storyOk = storyText === String(storyYear);
     if (!yearOk || !ageOk || !storyOk) restore();
   };
@@ -124,7 +131,7 @@ export default function BirthYearField({
     const next = (year || 1990) + delta;
     if (!inRange(next)) return;
     setMessage(null);
-    setAgeText(String(storyYear - next));
+    setAgeText(ageInStory(next, storyYear));
     commit(next);
   };
 

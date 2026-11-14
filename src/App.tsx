@@ -37,8 +37,15 @@ const toName = (p: NamePair): Name => ({
   gender: p[0]?.gender ?? "",
 });
 
+const writeNameToClipboard = async (name: string) => {
+  await navigator.clipboard.writeText(name);
+};
+
 function App() {
-  const [query, setQuery] = useState<Query>(() => parseQuery(window.location.search));
+  const [{ query, debounceFetch }, setQueryState] = useState(() => ({
+    query: parseQuery(window.location.search),
+    debounceFetch: false,
+  }));
   const [pairs, setPairs] = useState<NamePair[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [status, setStatus] = useState<Status>("loading");
@@ -51,14 +58,16 @@ function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
 
-  const isDesktop = useMediaQuery("(min-width: 640px)");
-  const canHover = useMediaQuery("(hover: hover) and (pointer: fine)");
+  const canShowSidebar = useMediaQuery("(min-width: 768px)");
+  const inlineActions = useMediaQuery(
+    "(min-width: 1024px) and (hover: hover) and (pointer: fine)",
+  );
   const { isDarkMode, toggleDarkMode } = useTheme();
 
   const abortRef = useRef<AbortController | null>(null);
 
-  const updateQuery = useCallback((changes: Partial<Query>) => {
-    setQuery((prev) => ({ ...prev, ...changes }));
+  const updateQuery = useCallback((changes: Partial<Query>, debounceFetch = false) => {
+    setQueryState((prev) => ({ query: { ...prev.query, ...changes }, debounceFetch }));
   }, []);
 
   const showToast = useCallback((text: string) => {
@@ -87,6 +96,7 @@ function App() {
 
     try {
       const body = await getJson<{ names?: NamePair[] }>(namesUrl(API_URL, q), controller.signal);
+      if (controller.signal.aborted) return;
       const page = body.names ?? [];
       // With no match, the API echoes the typed prefix back without an id.
       const valid = page.filter((p) => p[0]?.id && p[1]?.id);
@@ -116,10 +126,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    void fetchPage(query, true);
     setExpandedIndex(null);
-    return () => abortRef.current?.abort();
-  }, [query, fetchPage]);
+    let timer: number | undefined;
+    if (debounceFetch) {
+      setStatus("loading");
+      timer = window.setTimeout(() => void fetchPage(query, true), 250);
+    } else {
+      void fetchPage(query, true);
+    }
+    return () => {
+      window.clearTimeout(timer);
+      abortRef.current?.abort();
+    };
+  }, [query, debounceFetch, fetchPage]);
 
   // ---------- URL sync ----------
   useEffect(() => {
@@ -130,10 +149,14 @@ function App() {
   }, [query]);
 
   useEffect(() => {
-    const onPop = () => setQuery(parseQuery(window.location.search));
+    const onPop = () => updateQuery(parseQuery(window.location.search));
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, []);
+  }, [updateQuery]);
+
+  useEffect(() => {
+    if (canShowSidebar) setSheetOpen(false);
+  }, [canShowSidebar]);
 
   // New filters start at the top of the list.
   const firstRender = useRef(true);
@@ -152,7 +175,7 @@ function App() {
   const copyName = async (name: Name) => {
     const text = `${name.first} ${name.last}`;
     try {
-      await navigator.clipboard.writeText(text);
+      await writeNameToClipboard(text);
       showToast(`Copied “${text}”`);
     } catch {
       showToast("Couldn’t copy. Select the name and copy it instead.");
@@ -223,7 +246,7 @@ function App() {
         title="No names match these filters"
         body="Try setting one of the filters back to Any."
         action="Reset filters"
-        onAction={() => setQuery(DEFAULT_QUERY)}
+        onAction={() => updateQuery(DEFAULT_QUERY)}
       />
     );
   };
@@ -243,7 +266,7 @@ function App() {
         endMessage={status === "error" ? null : <EndOfList />}
         style={{ overflow: "visible" }}
       >
-        <ul className={canHover ? "grid grid-cols-[minmax(0,1fr)] gap-px p-2" : ""}>
+        <ul className={inlineActions ? "grid grid-cols-[minmax(0,1fr)] gap-px p-2" : ""}>
           {pairs.map((pair, i) => {
             const name = toName(pair);
             return (
@@ -253,7 +276,7 @@ function App() {
                 lockedFirst={!!lockedFirst}
                 lockedLast={!!lockedLast}
                 expanded={expandedIndex === i}
-                canHover={canHover}
+                inlineActions={inlineActions}
                 onToggle={() => setExpandedIndex(expandedIndex === i ? null : i)}
                 onOpen={() => setSelected(pair)}
                 onCopy={() => void copyName(name)}
@@ -285,9 +308,9 @@ function App() {
           <button
             type="button"
             className={iconButton}
-            onClick={() => (isDesktop ? setShowSidebar(!showSidebar) : setSheetOpen(true))}
-            aria-label={isDesktop ? (showSidebar ? "Hide filters" : "Show filters") : "Edit filters"}
-            aria-pressed={isDesktop ? showSidebar : undefined}
+            onClick={() => (canShowSidebar ? setShowSidebar(!showSidebar) : setSheetOpen(true))}
+            aria-label={canShowSidebar ? (showSidebar ? "Hide filters" : "Show filters") : "Edit filters"}
+            aria-pressed={canShowSidebar ? showSidebar : undefined}
           >
             <SlidersHorizontal size={19} aria-hidden="true" />
           </button>
@@ -301,8 +324,7 @@ function App() {
           </button>
         </div>
 
-        {/* Phones: one summary line instead of an open sidebar */}
-        <div className="grid gap-1.5 px-4 pb-2.5 sm:hidden">
+        <div className="grid gap-1.5 px-4 pb-2.5 md:hidden">
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
@@ -316,8 +338,8 @@ function App() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl sm:flex sm:gap-6 sm:px-6 sm:py-6">
-        {isDesktop && showSidebar && (
+      <div className="mx-auto max-w-5xl sm:px-6 sm:py-6 md:flex md:gap-6">
+        {canShowSidebar && showSidebar && (
           <aside
             aria-label="Filters"
             className="sticky top-20 max-h-[calc(100dvh-6.5rem)] w-72 shrink-0 self-start overflow-y-auto rounded-xl border border-line bg-surface p-5"
@@ -327,14 +349,14 @@ function App() {
         )}
 
         <main className="min-w-0 flex-1">
-          {isDesktop && lockChips && <div className="mb-3 flex flex-wrap gap-1.5">{lockChips}</div>}
+          {canShowSidebar && lockChips && <div className="mb-3 flex flex-wrap gap-1.5">{lockChips}</div>}
           <div className="sm:rounded-xl sm:border sm:border-line sm:bg-surface" aria-busy={status === "loading"}>
             {renderList()}
           </div>
         </main>
       </div>
 
-      {!isDesktop && (
+      {!canShowSidebar && (
         <FilterSheet
           open={sheetOpen}
           onClose={() => setSheetOpen(false)}
@@ -346,7 +368,7 @@ function App() {
       <NameDrawer
         namePair={selected}
         onClose={() => setSelected(null)}
-        onCopy={() => selectedName && void copyName(selectedName)}
+        onCopy={writeNameToClipboard}
         onLockFirst={() => selectedName && toggleLockFirst(selectedName)}
         onLockLast={() => selectedName && toggleLockLast(selectedName)}
         isFirstNameLocked={!!selectedName && query.fstartswith === lockValue(selectedName.first)}
