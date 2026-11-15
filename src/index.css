@@ -114,6 +114,9 @@ dialog.panel {
   dialog.panel[open] {
     animation: slide-up 0.22s ease-out;
   }
+  dialog.sheet[open] {
+    animation-name: slide-up, fade-in;
+  }
   @media (min-width: 640px) {
     dialog.panel[open] {
       animation: slide-in 0.22s ease-out;
@@ -121,7 +124,10 @@ dialog.panel {
   }
 }
 @keyframes slide-up {
-  from { transform: translateY(24px); opacity: 0; }
+  from { transform: translateY(24px); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
 }
 @keyframes slide-in {
   from { transform: translateX(32px); opacity: 0; }

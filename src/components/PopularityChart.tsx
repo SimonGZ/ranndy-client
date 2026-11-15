@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { NameHistory } from "../types";
 
 import { API_URL, getJson } from "../lib/api";
@@ -56,6 +56,7 @@ export default function PopularityChart({
   const { data, error } = useNameHistory(firstName, gender);
   const [expanded, setExpanded] = useState(false);
   const [hoverYear, setHoverYear] = useState<number | null>(null);
+  const H = expanded ? 200 : 118;
 
   const geometry = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -63,7 +64,6 @@ export default function PopularityChart({
     const last = data[data.length - 1].year;
     const decades = data.filter((d) => d.year % 10 === 0);
     const points = expanded || decades.length < 3 ? data : decades;
-    const H = expanded ? 200 : 118;
     const padT = 28;
     const ranks = data.map((d) => d.rank);
     const lo = Math.log(Math.max(1, Math.min(...ranks) * 0.8));
@@ -83,20 +83,55 @@ export default function PopularityChart({
     const yearTicks = expanded
       ? [first, ...[1920, 1960, 2000].filter((t) => t > first + 12 && t < last - 12), last]
       : [first, last];
-    return { first, last, points, H, padT, x, y, gridRanks, yearTicks };
-  }, [data, expanded]);
+    return { first, last, points, padT, x, y, gridRanks, yearTicks };
+  }, [data, expanded, H]);
 
-  if (error) {
-    return <p className="text-[0.85rem] text-muted">Couldn’t load the popularity history. {error}</p>;
-  }
-  if (!data) {
-    return <div className="h-[100px] rounded-md bg-sunk motion-safe:animate-pulse" aria-label="Loading popularity" />;
-  }
-  if (!geometry) {
-    return <p className="text-[0.85rem] text-muted">No popularity history for {firstName}.</p>;
+  const loading = !data && !error;
+  const unavailable = !geometry && !loading;
+
+  const renderFrame = (plot: ReactNode) => (
+    <div className="grid min-w-0 gap-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.07em] text-muted">
+          {firstName} · rank {expanded ? "every year" : "by decade"}
+        </h3>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          disabled={!geometry}
+          onClick={() => {
+            setExpanded(!expanded);
+            setHoverYear(null);
+          }}
+          className={`cursor-pointer text-[0.82rem] font-medium text-accent enabled:hover:underline disabled:cursor-default disabled:text-muted ${unavailable ? "invisible" : ""}`}
+        >
+          {expanded ? "Show by decade" : "Show every year"}
+        </button>
+      </div>
+      {plot}
+      <p className={`text-[0.75rem] text-muted ${unavailable ? "invisible" : ""}`}>
+        Lower is more popular. Log scale. Source: U.S. Social Security baby name data.
+      </p>
+    </div>
+  );
+
+  if (!data || !geometry) {
+    const message = error
+      ? `Couldn’t load the popularity history. ${error}`
+      : `No popularity history for ${firstName}.`;
+    return renderFrame(
+      <div
+        className={`w-full min-w-0 ${loading ? "rounded-md bg-sunk" : "break-words text-[0.85rem] text-muted"}`}
+        style={{ aspectRatio: `${W} / ${H}` }}
+      >
+        {loading ? (
+          <span className="sr-only" role="status">Loading popularity…</span>
+        ) : message}
+      </div>,
+    );
   }
 
-  const { first, last, points, H, padT, x, y, gridRanks, yearTicks } = geometry;
+  const { first, last, points, padT, x, y, gridRanks, yearTicks } = geometry;
   const byYear = new Map(data.map((d) => [d.year, d]));
   const peak = data.reduce((a, b) => (b.rank < a.rank ? b : a));
   const latest = data[data.length - 1];
@@ -121,24 +156,7 @@ export default function PopularityChart({
     }
   };
 
-  return (
-    <div className="grid gap-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.07em] text-muted">
-          {firstName} · rank {expanded ? "every year" : "by decade"}
-        </h3>
-        <button
-          type="button"
-          aria-expanded={expanded}
-          onClick={() => {
-            setExpanded(!expanded);
-            setHoverYear(null);
-          }}
-          className="cursor-pointer text-[0.82rem] font-medium text-accent hover:underline"
-        >
-          {expanded ? "Show by decade" : "Show every year"}
-        </button>
-      </div>
+  return renderFrame(
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="block h-auto w-full touch-pan-y cursor-crosshair"
@@ -231,10 +249,6 @@ export default function PopularityChart({
         ) : (
           <circle cx={x(latest.year)} cy={y(latest.rank)} r="3.5" fill="var(--color-accent)" />
         )}
-      </svg>
-      <p className="text-[0.75rem] text-muted">
-        Lower is more popular. Log scale. Source: U.S. Social Security baby name data.
-      </p>
-    </div>
+      </svg>,
   );
 }
