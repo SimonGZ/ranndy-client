@@ -98,7 +98,7 @@ export default function NameRow({
   }
 
   return (
-    <li className={`border-b border-line last:border-b-0 ${expanded ? "bg-surface" : "md:odd:bg-row-stripe"}`}>
+    <li className="border-b border-line bg-surface odd:bg-row-stripe last:border-b-0">
       <div className="flex items-center">
         <button
           type="button"
